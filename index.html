@@ -721,7 +721,6 @@ async function renderModel(recId) {
       <div class="detail-section">
         <div class="section-head" onclick="toggleSection(this)">PHYSICAL SPECIFICATIONS <span class="chevron">▾</span></div>
         <div class="section-body collapsed">
-          ${row('Dimensions', f[F.dims])}
           ${f[F.width] ? row('Width', f[F.width] + ' mm') : ''}
           ${f[F.depth] ? row('Depth', f[F.depth] + ' mm') : ''}
           ${f[F.height] ? row('Height', f[F.height] + ' mm') : ''}
