@@ -174,7 +174,7 @@ a:hover { text-decoration: underline; }
   cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s;
 }
 .lightbox.open { opacity: 1; pointer-events: auto; }
-.lightbox img { max-width: 92vw; max-height: 92vh; border-radius: var(--radius); object-fit: contain; }
+.lightbox img { max-width: 92vw; max-height: 92vh; border-radius: var(--radius); object-fit: contain; transition: opacity .15s; }
 .lightbox-close {
   position: absolute; top: 16px; right: 20px; font-size: 28px;
   color: #fff; cursor: pointer; opacity: .7;
@@ -468,11 +468,17 @@ function groupProducts(records) {
 // LIGHTBOX
 // ═══════════════════════════════════════════════════════════════
 function openLightbox(src) {
-  document.getElementById('lightboxImg').src = src;
+  const img = document.getElementById('lightboxImg');
+  img.style.opacity = '0';
+  img.src = src;
+  img.onload = () => { img.style.opacity = '1'; };
   document.getElementById('lightbox').classList.add('open');
 }
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
+  const img = document.getElementById('lightboxImg');
+  img.src = '';
+  img.style.opacity = '0';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
