@@ -1,1 +1,942 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Perimeter Database</title><style>:root{--bg:#0d1117;--bg-card:#161b22;--border:#30363d;--border-light:rgba(240,246,252,0.06);--text:#e6edf3;--text2:#b1bac4;--text3:#7d8590;--text-label:#8b949e;--accent:#58a6ff;--accent-dim:rgba(88,166,255,0.12);--warn:#d29922;--warn-bg:rgba(210,153,34,0.08);--warn-border:rgba(210,153,34,0.2)}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Source Sans 3','Noto Sans JP',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}#app{max-width:1280px;margin:0 auto;padding:12px 16px 40px}@media(min-width:768px){#app{padding:20px 32px 60px}}.header{display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--border-light);margin-bottom:4px}.header-icon{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#58a6ff,#1f6feb);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}.header-title{font-size:14px;font-weight:700}.breadcrumb{display:flex;align-items:center;gap:4px;padding:10px 0;font-size:12px;color:var(--text3);flex-wrap:wrap;border-bottom:1px solid var(--border-light);margin-bottom:16px}.breadcrumb a{background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;text-decoration:none}.breadcrumb .current{color:var(--text);font-weight:600}.page-title{font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-0.02em}@media(min-width:768px){.page-title{font-size:26px}}.page-sub{font-size:13px;color:var(--text3);margin-bottom:20px}.card-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px}@media(min-width:640px){.card-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}}.card{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;transition:border-color 0.15s,transform 0.15s;margin-bottom:0;color:inherit}.card:hover{border-color:var(--accent);transform:translateY(-1px)}.card-title{font-size:15px;font-weight:600;margin-bottom:3px}.card-sub{font-size:12px;color:var(--text3)}.card-arrow{font-size:18px;color:var(--text3);flex-shrink:0}.model-card{display:flex;gap:14px;align-items:center;padding:12px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color 0.15s;margin-bottom:0}.model-card:hover{border-color:var(--accent)}.model-thumb{width:64px;height:64px;min-width:64px;border-radius:10px;object-fit:cover;background:var(--bg);border:1px solid var(--border)}.model-thumb-placeholder{width:64px;height:64px;min-width:64px;border-radius:10px;background:linear-gradient(145deg,#1a2744,#0d1117);border:1px solid rgba(88,166,255,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3)}.model-info{flex:1;min-width:0}.model-name{font-size:16px;font-weight:600;margin-bottom:4px}.model-meta{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;letter-spacing:0.02em;margin-right:4px;margin-bottom:4px}.badge-default{background:rgba(240,246,252,0.06);color:var(--text-label)}.badge-accent{background:var(--accent-dim);color:var(--accent)}.hero-img{width:100%;max-height:500px;border-radius:12px;object-fit:contain;border:1px solid var(--border);margin-bottom:14px;background:var(--bg-card)}.hero-placeholder{width:100%;height:180px;border-radius:12px;background:linear-gradient(145deg,#1a2744,#0d1117);border:1px solid rgba(88,166,255,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:14px}.hero-placeholder span{font-size:11px;color:var(--accent);opacity:0.5}.detail-layout{display:block}@media(min-width:900px){.detail-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}}.detail-left,.detail-right{min-width:0}.spec-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px}.spec-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-light);font-size:13px;line-height:1.5}.spec-row:last-child{border-bottom:none}.spec-label{min-width:100px;color:var(--text-label);font-weight:500;flex-shrink:0}.spec-value{color:var(--text);word-break:break-word;white-space:pre-line}.expander-btn{width:100%;padding:10px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;font-family:inherit;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px}.expander-btn.open{border-radius:10px 10px 0 0;margin-bottom:0}.expander-body{background:var(--bg-card);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:16px;margin-bottom:12px}.section-title{font-size:13px;font-weight:700;color:var(--text3);margin:20px 0 10px;text-transform:uppercase;letter-spacing:0.06em}.program-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}.program-card{padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:border-color 0.15s}.program-card:hover{border-color:var(--accent)}.program-name{margin-top:8px;font-size:14px;font-weight:600}.program-pts{font-size:11px;color:var(--text3);margin-top:2px}.pattern-row{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:700px){.pattern-row{grid-template-columns:1fr 1fr}}.pattern-hero{width:100%;max-width:300px;margin:0 auto;display:block;border-radius:10px;border:1px solid var(--border)}.pattern-hero-container{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;display:flex;justify-content:center}.coord-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:2px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:11px}.coord-cell{padding:3px 6px;background:rgba(110,160,255,0.08);border-radius:3px;text-align:center;color:#7dc4e8}.warn-box{padding:10px 14px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;font-size:12px;color:var(--warn);margin-bottom:16px;line-height:1.5}.loading{text-align:center;padding:60px 20px}.loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px}@keyframes spin{to{transform:rotate(360deg)}}.loading-text{font-size:13px;color:var(--text3)}.footer{margin-top:32px;padding-top:12px;border-top:1px solid var(--border-light);font-size:11px;color:var(--text3);text-align:center}.empty-msg{text-align:center;padding:30px 20px;font-size:13px;color:var(--text3)}</style></head><body><div id="app"><div class="header"><div class="header-icon">&#8853;</div><div class="header-title">Perimeter Database</div></div><div id="content"><div class="loading"><div class="loading-spinner"></div><div class="loading-text">Loading perimeter data...</div></div></div><div class="footer">Perimeter Database</div></div><script> var TK='pat0ernpUewVRI5Na.594c9aeeeed94fbd4829e5e0038c92b3e94a01351415d0f00c86f897324bce61'; var BASE='appjzmUh919TATEdP'; var MT='tblZb6Bxpy1vcovjl'; var PT='tbl5aqQ4wVa4HrXdN'; var MF='fldqnBgK33iSKtvPM,fldysRdi3QHsumrk9,fldaxoYmuozwWClgj,fldwxHiGz8OOTK1ZL,fldTpPXnv7lFGBuSb,fld9QZpSdodLphTkC,fldz85WeLvVQ70ycO,fldV7xd0gzWVFfv8I,fldHNYd7OPMeK6gH9,fldvJjR5YpuRKq0ha,fldrgX1TjqjllJMl6,fldiKzaVZKG9pvPaa,fld4lhLn23Gj1hetk,fldlGPjfjW0AionIX,flddBmHiIMowyhmKZ,fld3WdZm8FYQRPmVH,fldZG35byV7736peR,fldoraPYeEH7xoXGa,fld7YgjnccYZfcpI7,fldIJxcXlwugH40xg,fldDquqy8foSQqZhP,fldw7yrn4wTi5JqRv,fldh1UQFAkbcbRr3j'.split(','); var PFF='fldgebF1PjDUn0uS2,fld9VZHopFhwxunAE,fldjmQJSfPz95Ql3Z,fld5vxKF3FdUa7F1f,fldGOtejbDbaKBlmu,fldQ5idxvt3YcS3hU,fldRuvaZs6EDk6DMg,fldFA7EP0lTqCjyyM,fldBnpVw9nrtsDWrM,fldA40icdOGmJjm6f,fldFWVwTwAVUcAyCY,fld6gVu0xkSnyjoi3,fldJs6ucpY4TqghW5,fldck5K4l6wX6fERE,fldkYCGIDqxRa0iCk'.split(','); var mr=[],pr=[],pb={},ct,ex={},cr=function(){}; async function fa(t,ff){ var a=[],o=null; var fp=ff.map(function(x){return'fields%5B%5D='+x}).join('&'); do{ var u='https://api.airtable.com/v0/'+BASE+'/'+t+'?returnFieldsByFieldId=true&pageSize=100&'+fp+(o?'&offset='+o:''); var r=await fetch(u,{headers:{'Authorization':'Bearer '+TK}}); var d=await r.json(); if(d.error){throw new Error(d.error.message||d.error.type);} a=a.concat(d.records||[]); o=d.offset||null; }while(o); return a; } function g(r,id){return r.fields?r.fields[id]:undefined;} function gt(r,id){var v=g(r,id);if(!v)return'';if(typeof v==='string')return v;if(v&&v.specialValue)return String(v.specialValue);if(typeof v==='object'&&v&&v.error)return'';return String(v);} function gs(r,id){var v=g(r,id);if(!v)return'';if(Array.isArray(v))return v.map(function(x){return x.name||x}).join(', ');return v.name||String(v);} function gi(r,id,sz){var v=g(r,id);if(!v||!Array.isArray(v)||!v.length)return null;var a=v[0];if(sz==='thumb'&&a.thumbnails&&a.thumbnails.small)return a.thumbnails.small.url;if(sz==='large'&&a.thumbnails&&a.thumbnails.large)return a.thumbnails.large.url;return a.url;} function gl(r,id){var v=g(r,id);return(v&&Array.isArray(v))?v:[];} function gn(r,id){var v=g(r,id);return typeof v==='number'?v:0;} function e(s){if(!s)return'';var d=document.createElement('div');d.textContent=String(s);return d.innerHTML;} function gbp(){var s=mr.slice().sort(function(a,b){var sa=gt(a,'fldDquqy8foSQqZhP')||'ZZZZ';var sb=gt(b,'fldDquqy8foSQqZhP')||'ZZZZ';if(sa!==sb)return sa.localeCompare(sb);return gn(a,'fldIJxcXlwugH40xg')-gn(b,'fldIJxcXlwugH40xg');});var gg={};for(var i=0;i<s.length;i++){var p=gt(s[i],'fldqnBgK33iSKtvPM')||'Unknown';if(!gg[p])gg[p]=[];gg[p].push(s[i]);}return gg;} function gpf(r){var l=gl(r,'fldiKzaVZKG9pvPaa');var p=l.map(function(id){return pb[id]}).filter(Boolean);p.sort(function(a,b){return gn(a,'fldck5K4l6wX6fERE')-gn(b,'fldck5K4l6wX6fERE')});return p;} function rb(cc){return '<div class="breadcrumb">'+cc.map(function(c,i){return(i>0?'<span class="sep"> \u203a </span>':'')+(c.a?'<a href="#" onclick="'+c.a+';return false">'+e(c.l)+'</a>':'<span class="current">'+e(c.l)+'</span>')}).join('')+'</div>';} function rs(l,v){if(!v||v==='#ERROR!'||v==='NaN')return'';return '<div class="spec-row"><span class="spec-label">'+e(l)+'</span><span class="spec-value">'+e(v)+'</span></div>';} function re(k,l,b){var o=ex[k];return '<button class="expander-btn '+(o?'open':'')+'" onclick="ex[\''+k+'\']=!ex[\''+k+'\'];cr()"><span>'+e(l)+'</span><span style="font-size:11px;color:var(--text3)">'+(o?'\u25b2':'\u25bc')+'</span></button>'+(o?'<div class="expander-body">'+b+'</div>':'');} function r0(){ var gg=gbp();var pn=Object.keys(gg);cr=r0; ct.innerHTML='<h2 class="page-title">Perimeter Database</h2><p class="page-sub">'+mr.length+' models \u00b7 '+pr.length+' test patterns</p><div class="card-grid">'+pn.map(function(p){var mm=gg[p];var mf=gt(mm[0],'fldwxHiGz8OOTK1ZL');return '<div class="card" onclick="r1(this.dataset.p)" data-p="'+e(p)+'"><div><div class="card-title">'+e(p)+'</div><div class="card-sub">'+e(mf)+' \u00b7 '+mm.length+' model'+(mm.length>1?'s':'')+'</div></div><span class="card-arrow">\u203a</span></div>'}).join('')+'</div>'; } function r1(pn){ var gg=gbp();var mm=gg[pn]||[];var mf=mm.length?gt(mm[0],'fldwxHiGz8OOTK1ZL'):'';ex={};cr=function(){r1(pn)}; ct.innerHTML=rb([{l:'All Products',a:'r0()'},{l:pn}])+'<h2 class="page-title">'+e(pn)+'</h2><p class="page-sub">'+e(mf)+'</p><div class="card-grid">'+mm.map(function(r){var m=gt(r,'fldysRdi3QHsumrk9');var y=gt(r,'fldTpPXnv7lFGBuSb');var t=gs(r,'fld9QZpSdodLphTkC');var im=gi(r,'fldaxoYmuozwWClgj','thumb');var pc=gl(r,'fldiKzaVZKG9pvPaa').length;return '<div class="model-card" onclick="r2(\''+r.id+'\')">'+(im?'<img class="model-thumb" src="'+im+'" onerror="this.className=\'model-thumb-placeholder\';this.src=\'\';this.alt=\'IMG\'">':'<div class="model-thumb-placeholder">IMG</div>')+'<div class="model-info"><div class="model-name">'+e(m)+'</div><div>'+(y?'<span class="badge badge-default">'+e(y)+'</span>':'')+(pc>0?'<span class="badge badge-accent">'+pc+' programs</span>':'')+'</div><div class="model-meta">'+e(t)+'</div></div><span class="card-arrow">\u203a</span></div>'}).join('')+'</div>'; } function r2(id){ var r=mr.find(function(x){return x.id===id});if(!r)return; var pn=gt(r,'fldqnBgK33iSKtvPM'),m=gt(r,'fldysRdi3QHsumrk9'),mf=gt(r,'fldwxHiGz8OOTK1ZL'),y=gt(r,'fldTpPXnv7lFGBuSb'),tp=gs(r,'fld9QZpSdodLphTkC'); var st=gt(r,'fldz85WeLvVQ70ycO'),bg=gt(r,'fldV7xd0gzWVFfv8I'),fx=gt(r,'fldHNYd7OPMeK6gH9'); var sg=gt(r,'fldvJjR5YpuRKq0ha'),pt=gt(r,'fldrgX1TjqjllJMl6'),an=gt(r,'fld4lhLn23Gj1hetk'); var so=gs(r,'fldlGPjfjW0AionIX'),dm=gt(r,'flddBmHiIMowyhmKZ'),cn=gt(r,'fld3WdZm8FYQRPmVH'); var us=gs(r,'fldZG35byV7736peR'),cm=gt(r,'fldoraPYeEH7xoXGa'),rf=gt(r,'fld7YgjnccYZfcpI7'); var pr2=gt(r,'fldw7yrn4wTi5JqRv'),md=gt(r,'fldh1UQFAkbcbRr3j'); var hi=gi(r,'fldaxoYmuozwWClgj','large');var pfs=gpf(r); ex={};cr=function(){r2(id)}; var sb=[rs('Strategies',sg),rs('Test Patterns',pt),rs('Analysis',an),rs('Storage',so),rs('Connectivity',cn),rs('Peripheral Range',pr2),rs('Meas. Distance',md),rs('Physical Specs',dm),rs('Intended Use',us)].join(''); var rb2=rf?'<div style="font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-line">'+e(rf)+'</div>':''; var leftCol='<div class="detail-left">'+(hi?'<img class="hero-img" src="'+hi+'" onerror="this.style.display=\'none\'">':'<div class="hero-placeholder"><span>No image available</span></div>')+'<div>'+(y?'<span class="badge badge-default">'+e(y)+'</span>':'')+(tp?'<span class="badge badge-default">'+e(tp)+'</span>':'')+'</div><h2 style="font-size:22px;font-weight:700;margin:6px 0 2px">'+e(m)+'</h2><p style="font-size:13px;color:var(--text3);margin-bottom:16px">'+e(mf)+'</p><div class="spec-panel">'+rs('Stimulus',st)+rs('Background',bg)+rs('Fixation',fx)+'</div></div>'; var rightCol='<div class="detail-right">'+re('sp','Full Specifications',sb)+(cm?re('cm','Special Comments','<div class="spec-value">'+e(cm)+'</div>'):'')+(rf?re('rf','References',rb2):'')+(pfs.length>0?'<div class="section-title" style="margin-top:0">Test Programs ('+pfs.length+')</div><div class="program-grid">'+pfs.map(function(p){var n=gt(p,'fld9VZHopFhwxunAE');var c=gt(p,'fldQ5idxvt3YcS3hU');var im=gi(p,'fldjmQJSfPz95Ql3Z','thumb');var u=gt(p,'fldJs6ucpY4TqghW5');return '<div class="program-card" onclick="r3(\''+r.id+'\',\''+p.id+'\')">'+(im?'<img src="'+im+'" style="width:110px;height:110px;object-fit:contain;border-radius:6px" onerror="this.style.display=\'none\'">':'<div style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:11px">No figure</div>')+'<div class="program-name">'+e(n)+'</div><div class="program-pts">'+e(c)+'</div>'+(u?'<div style="font-size:10px;color:var(--warn);margin-top:4px">\ud83d\udccc</div>':'')+'</div>'}).join('')+'</div>':'<div class="empty-msg">No test programs linked yet</div>')+'</div>'; ct.innerHTML=rb([{l:'All Products',a:'r0()'},{l:pn,a:"r1('"+pn.replace(/'/g,"\\'")+"')"},{l:m}])+'<div class="detail-layout">'+leftCol+rightCol+'</div>'; } function r3(mi,pi){ var mainRec=mr.find(function(x){return x.id===mi});var p=pb[pi];if(!mainRec||!p)return; var pn=gt(mainRec,'fldqnBgK33iSKtvPM'),m=gt(mainRec,'fldysRdi3QHsumrk9'),mf=gt(mainRec,'fldwxHiGz8OOTK1ZL'); var n=gt(p,'fld9VZHopFhwxunAE'),pt=gt(p,'fldQ5idxvt3YcS3hU'); var ca=gs(p,'fldRuvaZs6EDk6DMg'),mo=gs(p,'fldFA7EP0lTqCjyyM'); var ds=gt(p,'fldGOtejbDbaKBlmu'),un=gt(p,'fldJs6ucpY4TqghW5'); var co=gt(p,'fldA40icdOGmJjm6f'),om=g(p,'fld6gVu0xkSnyjoi3'),ev=gs(p,'fldBnpVw9nrtsDWrM'); var io=gi(p,'fldjmQJSfPz95Ql3Z','large'),is2=gi(p,'fld5vxKF3FdUa7F1f','large'); var cp=[],cc=0;if(co){try{cp=JSON.parse(co);cc=cp.length}catch(er){}} var dl=gl(p,'fldkYCGIDqxRa0iCk'); var od=dl.filter(function(id){return id!==mi}).map(function(id){var x=mr.find(function(z){return z.id===id});return x?{n:gt(x,'fldqnBgK33iSKtvPM')+' '+gt(x,'fldysRdi3QHsumrk9'),id:x.id}:null}).filter(Boolean); ex={};cr=function(){r3(mi,pi)}; var dc=cp.slice(0,ex.ac?cp.length:20); var cb=''; if(cp.length>0){cb='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+cc+' points</div><div class="coord-grid">'+dc.map(function(q){var x=q.x!==undefined?q.x:q[0];var y=q.y!==undefined?q.y:q[1];return '<div class="coord-cell">('+x+', '+y+')</div>'}).join('')+'</div>'+(cp.length>20&&!ex.ac?'<button style="margin-top:8px;background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;font-family:inherit" onclick="ex.ac=true;cr()">\u25bc Show all '+cc+' points</button>':'')+(om?'<div style="margin-top:8px;font-size:11px;color:var(--text3)">OS = Mirror of OD</div>':'');}else{cb='<div style="font-size:12px;color:var(--text3)">No coordinate data</div>';} var db=od.length>0?od.map(function(d){return '<div style="margin-bottom:4px"><a href="#" onclick="r2(\''+d.id+'\');return false" style="color:var(--accent);font-size:12px;text-decoration:none">\u2022 '+e(d.n)+'</a></div>'}).join(''):'<div style="font-size:12px;color:var(--text3)">Unique to this device</div>'; var patternSection=''; if(io||is2){patternSection='<div class="pattern-row">'+(io?'<div><div class="section-title" style="margin-top:0">Pattern Figure (OD)</div><div class="pattern-hero-container"><img class="pattern-hero" src="'+io+'"></div></div>':'')+(is2?'<div><div class="section-title" style="margin-top:0">Pattern Figure (OS)</div><div class="pattern-hero-container"><img class="pattern-hero" src="'+is2+'"></div></div>':'')+'</div>';} ct.innerHTML=rb([{l:'All Products',a:'r0()'},{l:pn,a:"r1('"+pn.replace(/'/g,"\\'")+"')"},{l:m,a:"r2('"+mi+"')"},{l:n}])+'<div>'+(ca?'<span class="badge badge-accent">'+e(ca)+'</span>':'')+(pt?'<span class="badge badge-default">'+e(pt)+'</span>':'')+(mo?'<span class="badge badge-default">'+e(mo)+'</span>':'')+(ev?'<span class="badge badge-default">'+e(ev)+'</span>':'')+'</div><h2 style="font-size:22px;font-weight:700;margin:6px 0 2px">'+e(n)+'</h2><p style="font-size:13px;color:var(--text3);margin-bottom:16px">'+e(m)+' \u00b7 '+e(mf)+'</p>'+(ds?'<p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">'+e(ds)+'</p>':'')+(un?'<div class="warn-box">\u26a0 '+e(un)+'</div>':'')+patternSection+re('co','Coordinates'+(cc?' ('+cc+')':''),cb)+re('dv','Also Available On ('+od.length+')',db); } async function init(){ ct=document.getElementById('content'); try{ var r=await Promise.all([fa(MT,MF),fa(PT,PFF)]); mr=r[0];pr=r[1];pb={}; for(var i=0;i<pr.length;i++)pb[pr[i].id]=pr[i]; r0(); }catch(err){ ct.innerHTML='<div class="loading"><div class="loading-text" style="color:var(--warn)">Error: '+e(err.message)+'</div></div>'; } } init(); </script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automated Perimeter Catalog</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0f14;
+  --bg2: #12161e;
+  --bg3: #1a1f2b;
+  --bg4: #222838;
+  --border: #2a3040;
+  --border2: #363e52;
+  --text: #e2e6ef;
+  --text2: #9aa3b8;
+  --text3: #636d82;
+  --accent: #4a9eff;
+  --accent2: #2d7ad6;
+  --accent-soft: rgba(74,158,255,.08);
+  --green: #4ad295;
+  --amber: #f0b040;
+  --red: #e05252;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'DM Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.55; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Header ── */
+.site-header { 
+  padding: 20px 28px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--bg2); position: sticky; top: 0; z-index: 100;
+}
+.site-title { font-size: 15px; font-weight: 600; letter-spacing: .06em; color: var(--text2); }
+.site-title span { color: var(--accent); }
+.header-meta { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+
+/* ── Breadcrumb ── */
+.breadcrumb { 
+  padding: 10px 28px; font-size: 13px; color: var(--text3);
+  border-bottom: 1px solid var(--border); background: var(--bg);
+  font-family: var(--mono); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.breadcrumb a { color: var(--text2); }
+.breadcrumb a:hover { color: var(--accent); text-decoration: none; }
+.breadcrumb .sep { color: var(--text3); opacity: .5; }
+
+/* ── Container ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 28px 60px; }
+
+/* ── Loading ── */
+.loading { text-align: center; padding: 80px 20px; }
+.loading .spinner { 
+  width: 32px; height: 32px; border: 3px solid var(--border2);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); }}
+.loading p { color: var(--text3); font-size: 14px; }
+
+/* ── Sort controls ── */
+.sort-bar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.sort-bar label { font-size: 12px; color: var(--text3); font-family: var(--mono); letter-spacing: .05em; }
+.sort-btn {
+  font-size: 12px; font-family: var(--mono); padding: 5px 14px;
+  border: 1px solid var(--border2); border-radius: 20px;
+  background: transparent; color: var(--text2); cursor: pointer;
+  transition: all .15s;
+}
+.sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sort-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.record-count { font-size: 12px; color: var(--text3); font-family: var(--mono); margin-left: auto; }
+
+/* ── Product Cards (Level 0) ── */
+.product-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.product-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.product-card:hover { border-color: var(--accent); background: var(--bg3); transform: translateY(-1px); }
+.product-flag { width: 28px; flex-shrink: 0; margin-top: 2px; }
+.product-flag img { width: 28px; border-radius: 2px; display: block; }
+.product-info { flex: 1; min-width: 0; }
+.product-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.product-meta { font-size: 12px; color: var(--text3); font-family: var(--mono); display: flex; gap: 10px; flex-wrap: wrap; }
+.product-meta .country { color: var(--text2); }
+.product-meta .year { color: var(--accent); opacity: .8; }
+.product-meta .count { color: var(--text3); }
+.product-type { 
+  font-size: 10px; font-family: var(--mono); letter-spacing: .04em;
+  padding: 2px 8px; border-radius: 10px; 
+  background: var(--accent-soft); color: var(--accent); 
+  white-space: nowrap; margin-top: 4px; display: inline-block;
+}
+
+/* ── Model List (Level 1) ── */
+.model-list { display: flex; flex-direction: column; gap: 8px; }
+.model-row {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 18px;
+  cursor: pointer; transition: all .15s;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+}
+.model-row:hover { border-color: var(--accent); background: var(--bg3); }
+.model-so { font-family: var(--mono); font-size: 12px; color: var(--text3); min-width: 32px; text-align: right; }
+.model-name { font-size: 14px; font-weight: 500; }
+.model-year { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+.model-mfr { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* ── Model Detail (Level 2) ── */
+.detail-header { margin-bottom: 24px; }
+.detail-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.detail-sub { font-size: 13px; color: var(--text2); }
+.detail-sub span { margin-right: 16px; }
+
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
+
+.detail-section {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.detail-section.full-width { grid-column: 1 / -1; }
+.section-head {
+  padding: 12px 16px; font-size: 12px; font-weight: 600;
+  letter-spacing: .08em; color: var(--text2);
+  border-bottom: 1px solid var(--border); background: var(--bg3);
+  cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  user-select: none;
+}
+.section-head .chevron { transition: transform .2s; font-size: 14px; }
+.section-head.open .chevron { transform: rotate(180deg); }
+.section-body { padding: 14px 16px; }
+.section-body.collapsed { display: none; }
+
+.spec-row { 
+  display: flex; gap: 8px; padding: 5px 0; 
+  border-bottom: 1px solid rgba(42,48,64,.5); font-size: 13px;
+}
+.spec-row:last-child { border-bottom: none; }
+.spec-label { color: var(--text3); min-width: 140px; flex-shrink: 0; font-family: var(--mono); font-size: 11px; }
+.spec-value { color: var(--text); word-break: break-word; white-space: pre-wrap; }
+
+/* ── Image gallery ── */
+.image-gallery { display: flex; gap: 8px; flex-wrap: wrap; }
+.image-gallery img { 
+  max-width: 200px; max-height: 200px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); cursor: pointer; transition: transform .15s;
+  object-fit: contain; background: var(--bg);
+}
+.image-gallery img:hover { transform: scale(1.03); border-color: var(--accent); }
+
+/* ── Lightbox ── */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,.92);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.lightbox.open { opacity: 1; pointer-events: auto; }
+.lightbox img { max-width: 92vw; max-height: 92vh; border-radius: var(--radius); object-fit: contain; }
+.lightbox-close {
+  position: absolute; top: 16px; right: 20px; font-size: 28px;
+  color: #fff; cursor: pointer; opacity: .7;
+}
+.lightbox-close:hover { opacity: 1; }
+
+/* ── Strategies ── */
+.strategies-block { font-size: 13px; white-space: pre-wrap; font-family: var(--mono); line-height: 1.6; }
+.strategies-block .section-label { color: var(--accent); font-weight: 600; }
+
+/* ── References ── */
+.references-block { font-size: 12px; color: var(--text2); white-space: pre-wrap; line-height: 1.7; font-family: var(--mono); }
+
+/* ── Pattern grid ── */
+.pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.pattern-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px;
+  cursor: pointer; transition: all .15s; text-align: center;
+}
+.pattern-card:hover { border-color: var(--accent); background: var(--bg4); }
+.pattern-card .pname { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.pattern-card .pcat { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.pattern-card .pcount { font-size: 11px; color: var(--text2); margin-top: 4px; }
+.pattern-card img { max-width: 100%; max-height: 120px; border-radius: 4px; margin-top: 8px; }
+
+/* ── Pattern Detail (Level 3) ── */
+.pattern-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .pattern-detail-grid { grid-template-columns: 1fr; } }
+.pattern-image-wrap { text-align: center; }
+.pattern-image-wrap img { max-width: 100%; max-height: 400px; border-radius: var(--radius); border: 1px solid var(--border); }
+.coord-table { font-family: var(--mono); font-size: 11px; max-height: 300px; overflow-y: auto; }
+.coord-table table { width: 100%; border-collapse: collapse; }
+.coord-table th, .coord-table td { padding: 3px 8px; border-bottom: 1px solid var(--border); text-align: right; }
+.coord-table th { color: var(--text3); position: sticky; top: 0; background: var(--bg2); }
+
+/* ── Reliability ── */
+.reliability-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .reliability-grid { grid-template-columns: 1fr; } }
+.rel-item { background: var(--bg3); border-radius: var(--radius-sm); padding: 10px 12px; }
+.rel-item .rel-label { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-bottom: 4px; }
+.rel-item .rel-value { font-size: 13px; color: var(--text); white-space: pre-wrap; }
+
+/* ── Special Comments ── */
+.comments-block { font-size: 13px; white-space: pre-wrap; line-height: 1.7; color: var(--text2); }
+
+/* ── Back button ── */
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text2); margin-bottom: 16px;
+  cursor: pointer; padding: 4px 0;
+}
+.back-btn:hover { color: var(--accent); }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .site-header { padding: 14px 16px; }
+  .container { padding: 16px 16px 40px; }
+  .breadcrumb { padding: 8px 16px; }
+  .product-grid { grid-template-columns: 1fr; }
+  .detail-title { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-title"><span>//</span> AUTOMATED PERIMETER CATALOG</div>
+  <div class="header-meta" id="headerMeta">Loading...</div>
+</header>
+<nav class="breadcrumb" id="breadcrumb"></nav>
+<main class="container" id="app">
+  <div class="loading"><div class="spinner"></div><p>Fetching catalog data from Airtable...</p></div>
+</main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close">&times;</span>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const BASE_ID = 'appjzmUh919TATEdP';
+const MAIN_TABLE = 'tblZb6Bxpy1vcovjl';
+const PF_TABLE = 'tbl5aqQ4wVa4HrXdN';
+const TOKEN = 'pat0ernpUewVRI5Na.594c9aeeeed94fbd4829e5e0038c92b3e94a01351415d0f00c86f897324bce61';
+
+// Field IDs
+const F = {
+  // Identity
+  model: 'fldysRdi3QHsumrk9',
+  productName: 'fldqnBgK33iSKtvPM',
+  groupSort: 'fldDquqy8foSQqZhP',
+  sortOrder: 'fldIJxcXlwugH40xg',
+  manufacturer: 'fldwxHiGz8OOTK1ZL',
+  mfrUrl: 'fldnfaKnMsqeAjeXC',
+  type: 'fld9QZpSdodLphTkC',
+  releaseYear: 'fldTpPXnv7lFGBuSb',
+  specialComments: 'fldoraPYeEH7xoXGa',
+  references: 'fld7YgjnccYZfcpI7',
+  country: 'fldx8MTdjBBj5zBUt',
+  flag: 'fldZQZL2TXNhUd4iS',
+  displayName: 'fldta1YnCNQw82Qzr',
+  // Stimulus
+  stimType: 'fldo1GZpVHnC8a2UV',
+  stimLum: 'fldSLjyCSxbBt0KY7',
+  stimSizes: 'fldgHkbF9ninmy1fH',
+  stimDuration: 'fld6GjXKDfGF1ZjEZ',
+  stimColors: 'fldfVIBSOZdfUrny5',
+  stimInterval: 'fldPiGvfrtSv4GH9e',
+  stimNumber: 'fldGQuEe0sk0cf9Dt',
+  stimSummary: 'fldz85WeLvVQ70ycO',
+  // Background
+  bgType: 'fldj1VUT2zor67dY0',
+  bgSummary: 'fldV7xd0gzWVFfv8I',
+  bgLum: 'fldP0fkqjGjbqEqeq',
+  bgSize: 'fldjqirisW6XkkkOG',
+  bgColor: 'fld3vDNFBCuavEsoh',
+  // Fixation
+  fixType: 'flde0nnyuxowMG9l1',
+  fixNote: 'fldPvmNw5JuVraxUY',
+  fixMonitor: 'fldHNYd7OPMeK6gH9',
+  // Testing
+  strategies: 'fldvJjR5YpuRKq0ha',
+  patterns: 'fldrgX1TjqjllJMl6',
+  patternsLinked: 'fldiKzaVZKG9pvPaa',
+  intendedUse: 'fldZG35byV7736peR',
+  // Range
+  centralRange: 'fldh1UQFAkbcbRr3j',
+  peripheralRange: 'fldOeF8kFfLTzbG3r',
+  measDist: 'fldmlK2KqozIjkpNf',
+  // Analysis/Storage/Connectivity
+  analysis: 'fld4lhLn23Gj1hetk',
+  storage: 'fldlGPjfjW0AionIX',
+  connectivity: 'fld3WdZm8FYQRPmVH',
+  // Physical
+  width: 'fldMPqPoe9RXlxvZo',
+  depth: 'fldQx0eYjgEKyCcJE',
+  height: 'fldGwWuiuGghfljjb',
+  weight: 'fld31VzBkfE0LolfR',
+  dims: 'flddBmHiIMowyhmKZ',
+  // Reliability
+  fpDetection: 'fld1Z80Z47Z8ocV6A',
+  fnDetection: 'fldUoHDdWyIGFySGQ',
+  retestMethod: 'fld5lcjsHTr0zo9mO',
+  reliabilityNote: 'fldSfmiDHOnJCyL5i',
+  // Image
+  image: 'fldaxoYmuozwWClgj',
+};
+
+// PF Field IDs
+const PF = {
+  name: 'fld9VZHopFhwxunAE',
+  patternId: 'fldgebF1PjDUn0uS2',
+  so: 'fldck5K4l6wX6fERE',
+  deviceLink: 'fldkYCGIDqxRa0iCk',
+  pointCount: 'fldQ5idxvt3YcS3hU',
+  description: 'fldGOtejbDbaKBlmu',
+  category: 'fldRuvaZs6EDk6DMg',
+  measMode: 'fldFA7EP0lTqCjyyM',
+  eyeVariant: 'fldBnpVw9nrtsDWrM',
+  uncertaintyNotes: 'fldJs6ucpY4TqghW5',
+  coordsOD: 'fldA40icdOGmJjm6f',
+  osMirror: 'fld6gVu0xkSnyjoi3',
+  imageOD: 'fldjmQJSfPz95Ql3Z',
+  imageOS: 'fld5vxKF3FdUa7F1f',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let allRecords = [];
+let pfCache = {};  // recId -> PF data
+let sortMode = 'year'; // 'year' | 'name'
+
+// ═══════════════════════════════════════════════════════════════
+// AIRTABLE API
+// ═══════════════════════════════════════════════════════════════
+async function fetchAllMain() {
+  const fields = [
+    F.model, F.productName, F.groupSort, F.sortOrder, F.manufacturer, F.type,
+    F.releaseYear, F.country, F.flag, F.displayName, F.specialComments, F.references,
+    F.stimType, F.stimLum, F.stimSizes, F.stimDuration, F.stimColors, F.stimInterval, F.stimNumber, F.stimSummary,
+    F.bgType, F.bgSummary, F.bgLum, F.bgSize, F.bgColor,
+    F.fixType, F.fixNote, F.fixMonitor,
+    F.strategies, F.patterns, F.patternsLinked, F.intendedUse,
+    F.centralRange, F.peripheralRange, F.measDist,
+    F.analysis, F.storage, F.connectivity,
+    F.width, F.depth, F.height, F.weight, F.dims,
+    F.fpDetection, F.fnDetection, F.retestMethod, F.reliabilityNote,
+    F.mfrUrl, F.image,
+  ];
+  let all = [], offset = null;
+  do {
+    let url = `https://api.airtable.com/v0/${BASE_ID}/${MAIN_TABLE}?pageSize=100&returnFieldsByFieldId=true`;
+    fields.forEach(f => url += `&fields%5B%5D=${f}`);
+    url += `&sort%5B0%5D%5Bfield%5D=${F.sortOrder}&sort%5B0%5D%5Bdirection%5D=asc`;
+    if (offset) url += `&offset=${offset}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    if (!res.ok) throw new Error(`Airtable ${res.status}`);
+    const data = await res.json();
+    all.push(...data.records);
+    offset = data.offset;
+  } while (offset);
+  return all;
+}
+
+async function fetchPFForModel(recId) {
+  if (pfCache[recId]) return pfCache[recId];
+  
+  // Get linked PF record IDs from main record
+  const mainRec = allRecords.find(r => r.id === recId);
+  if (!mainRec) return [];
+  const linked = mainRec.fields?.[F.patternsLinked];
+  if (!linked || !linked.length) return [];
+  
+  const pfIds = linked.map(l => typeof l === 'object' ? l.id : l).filter(Boolean);
+  if (!pfIds.length) return [];
+  
+  const fields = [PF.name, PF.patternId, PF.so, PF.deviceLink, PF.pointCount, 
+    PF.description, PF.category, PF.measMode, PF.eyeVariant, PF.uncertaintyNotes,
+    PF.coordsOD, PF.osMirror, PF.imageOD, PF.imageOS];
+  
+  let allPF = [];
+  // Batch in groups of 20 to keep URL length manageable
+  for (let i = 0; i < pfIds.length; i += 20) {
+    const batch = pfIds.slice(i, i + 20);
+    const formula = `OR(${batch.map(b => `RECORD_ID()='${b}'`).join(',')})`;
+    let url = `https://api.airtable.com/v0/${BASE_ID}/${PF_TABLE}?returnFieldsByFieldId=true&pageSize=100`;
+    fields.forEach(f => url += `&fields%5B%5D=${f}`);
+    url += `&filterByFormula=${encodeURIComponent(formula)}`;
+    url += `&sort%5B0%5D%5Bfield%5D=${PF.so}&sort%5B0%5D%5Bdirection%5D=asc`;
+    try {
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+      if (res.ok) {
+        const data = await res.json();
+        allPF.push(...(data.records || []));
+      }
+    } catch(e) { console.error('PF fetch error:', e); }
+  }
+  pfCache[recId] = allPF;
+  return allPF;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+function g(rec, fid) { return rec.fields?.[fid] ?? ''; }
+function gn(rec, fid) { return rec.fields?.[fid] ?? null; }
+function sel(v) { 
+  if (!v) return '';
+  if (Array.isArray(v)) return v.map(x => typeof x === 'object' ? x.name : x).join(', ');
+  return typeof v === 'object' ? v.name : v;
+}
+function multiSel(v) {
+  if (!v) return '';
+  if (Array.isArray(v)) return v.map(x => typeof x === 'object' ? x.name : x).join(', ');
+  return typeof v === 'object' ? v.name : String(v);
+}
+function esc(s) { 
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML; 
+}
+function flagImg(rec) {
+  const flagArr = rec.fields?.[F.flag];
+  if (!flagArr || !flagArr.length) return '';
+  return flagArr[0].url || flagArr[0].thumbnails?.small?.url || '';
+}
+function countryName(rec) {
+  const c = rec.fields?.[F.country];
+  return c ? (typeof c === 'object' ? c.name : c) : '';
+}
+function extractYear(s) {
+  if (!s) return 9999;
+  const m = String(s).match(/(\d{4})/);
+  return m ? parseInt(m[1]) : 9999;
+}
+function groupProducts(records) {
+  const groups = {};
+  records.forEach(r => {
+    const pn = g(r, F.productName) || g(r, F.model) || '(Unknown)';
+    if (!groups[pn]) groups[pn] = [];
+    groups[pn].push(r);
+  });
+  return groups;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIGHTBOX
+// ═══════════════════════════════════════════════════════════════
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ═══════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════
+const $app = document.getElementById('app');
+const $bc = document.getElementById('breadcrumb');
+
+function setBreadcrumb(items) {
+  $bc.innerHTML = items.map((it, i) => {
+    if (i < items.length - 1) return `<a href="${it.hash}">${esc(it.label)}</a><span class="sep">›</span>`;
+    return `<span style="color:var(--text)">${esc(it.label)}</span>`;
+  }).join('');
+}
+
+// ── Level 0: Product List ──
+function renderProducts() {
+  const groups = groupProducts(allRecords);
+  const productList = Object.entries(groups).map(([name, records]) => {
+    const first = records[0];
+    const gs = g(first, F.groupSort);
+    const yr = extractYear(gs);
+    return { name, records, year: yr, first };
+  });
+
+  if (sortMode === 'year') productList.sort((a,b) => a.year - b.year);
+  else productList.sort((a,b) => a.name.localeCompare(b.name));
+
+  setBreadcrumb([{ label: 'Catalog', hash: '#' }]);
+  document.getElementById('headerMeta').textContent = `${allRecords.length} models · ${productList.length} products`;
+
+  let html = `
+    <div class="sort-bar">
+      <label>SORT BY</label>
+      <button class="sort-btn ${sortMode==='year'?'active':''}" onclick="sortMode='year';renderProducts()">Release Year</button>
+      <button class="sort-btn ${sortMode==='name'?'active':''}" onclick="sortMode='name';renderProducts()">Name A-Z</button>
+      <span class="record-count">${productList.length} products</span>
+    </div>
+    <div class="product-grid">
+  `;
+
+  productList.forEach(p => {
+    const flag = flagImg(p.first);
+    const country = countryName(p.first);
+    const types = [...new Set(p.records.map(r => sel(r.fields?.[F.type])).filter(Boolean))];
+    const yearStr = p.year < 9999 ? p.year : '?';
+    html += `
+      <div class="product-card" onclick="location.hash='#product/${encodeURIComponent(p.name)}'">
+        <div class="product-flag">${flag ? `<img src="${flag}" alt="${esc(country)}">` : ''}</div>
+        <div class="product-info">
+          <div class="product-name">${esc(p.name)}</div>
+          <div class="product-meta">
+            ${country ? `<span class="country">${esc(country)}</span>` : ''}
+            <span class="year">${yearStr}</span>
+            <span class="count">${p.records.length} model${p.records.length>1?'s':''}</span>
+          </div>
+          ${types.length ? `<span class="product-type">${esc(types[0])}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  $app.innerHTML = html;
+}
+
+// ── Level 1: Product Detail (Model List) ──
+function renderProduct(productName) {
+  const records = allRecords.filter(r => (g(r, F.productName) || g(r, F.model)) === productName);
+  if (!records.length) { $app.innerHTML = '<p>Product not found.</p>'; return; }
+  records.sort((a,b) => (gn(a, F.sortOrder)||0) - (gn(b, F.sortOrder)||0));
+
+  setBreadcrumb([
+    { label: 'Catalog', hash: '#' },
+    { label: productName, hash: `#product/${encodeURIComponent(productName)}` }
+  ]);
+
+  const first = records[0];
+  const flag = flagImg(first);
+  const country = countryName(first);
+  const mfrs = [...new Set(records.map(r => g(r, F.manufacturer)).filter(Boolean))];
+
+  let html = `
+    <div class="detail-header">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        ${flag ? `<img src="${flag}" style="width:28px;border-radius:2px" alt="">` : ''}
+        <div class="detail-title">${esc(productName)}</div>
+      </div>
+      <div class="detail-sub">
+        ${country ? `<span>${esc(country)}</span>` : ''}
+        ${mfrs.length ? `<span>${esc(mfrs[0])}</span>` : ''}
+        <span>${records.length} model${records.length>1?'s':''}</span>
+      </div>
+    </div>
+    <div class="model-list">
+  `;
+
+  records.forEach(r => {
+    const so = gn(r, F.sortOrder);
+    const name = g(r, F.model);
+    const yr = g(r, F.releaseYear);
+    const mfr = g(r, F.manufacturer);
+    const tp = sel(r.fields?.[F.type]);
+    html += `
+      <div class="model-row" onclick="location.hash='#model/${r.id}'">
+        <div class="model-so">${so ?? ''}</div>
+        <div>
+          <div class="model-name">${esc(name)}</div>
+          <div class="model-mfr">${esc(mfr ? mfr.split('\n')[0] : '')} ${tp ? '· '+esc(tp) : ''}</div>
+        </div>
+        <div class="model-year">${esc(yr ? String(yr).substring(0,30) : '')}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  $app.innerHTML = html;
+}
+
+// ── Level 2: Model Detail ──
+async function renderModel(recId) {
+  const rec = allRecords.find(r => r.id === recId);
+  if (!rec) { $app.innerHTML = '<p>Model not found.</p>'; return; }
+  const f = rec.fields || {};
+  const productName = f[F.productName] || f[F.model] || '';
+  const modelName = f[F.model] || '';
+
+  setBreadcrumb([
+    { label: 'Catalog', hash: '#' },
+    { label: productName, hash: `#product/${encodeURIComponent(productName)}` },
+    { label: modelName, hash: `#model/${recId}` },
+  ]);
+
+  // Helper
+  const row = (label, val) => val ? `<div class="spec-row"><div class="spec-label">${label}</div><div class="spec-value">${esc(String(val))}</div></div>` : '';
+  const rowSel = (label, val) => { const s = multiSel(val); return s ? row(label, s) : ''; };
+
+  // Strategies formatted
+  let stratHtml = '';
+  const strat = f[F.strategies];
+  if (strat) {
+    stratHtml = esc(strat)
+      .replace(/\[Abbreviations\]/g, '<span class="section-label">[Abbreviations]</span>')
+      .replace(/\[Strategy specifications\]/g, '<span class="section-label">[Strategy specifications]</span>');
+  }
+
+  // References formatted
+  const refs = f[F.references] || '';
+
+  // Images
+  const images = f[F.image] || [];
+
+  // Fetch PF records
+  const pfPromise = fetchPFForModel(recId);
+
+  let html = `
+    <div class="detail-header">
+      <div class="detail-title">${esc(modelName)}</div>
+      <div class="detail-sub">
+        <span>${esc(productName)}</span>
+        <span>${esc(f[F.releaseYear] || '')}</span>
+        <span>${esc(countryName(rec))}</span>
+      </div>
+    </div>
+    ${images.length ? `
+    <div class="detail-section" style="margin-bottom:20px">
+      <div class="section-head open" onclick="toggleSection(this)">PHOTOS (${images.length}) <span class="chevron">▾</span></div>
+      <div class="section-body">
+        <div class="image-gallery">
+          ${images.map(img => `<img src="${img.thumbnails?.large?.url || img.url}" alt="${esc(modelName)}" onclick="openLightbox('${img.url}')">`).join('')}
+        </div>
+      </div>
+    </div>` : ''}
+    <div class="detail-grid">
+
+      <!-- Stimulus -->
+      <div class="detail-section">
+        <div class="section-head open" onclick="toggleSection(this)">STIMULUS <span class="chevron">▾</span></div>
+        <div class="section-body">
+          ${rowSel('Type', f[F.stimType])}
+          ${row('Luminance', f[F.stimLum])}
+          ${row('Sizes', f[F.stimSizes])}
+          ${row('Duration', f[F.stimDuration])}
+          ${rowSel('Colors', f[F.stimColors])}
+          ${row('Interval', f[F.stimInterval])}
+          ${row('Number', f[F.stimNumber])}
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div class="detail-section">
+        <div class="section-head open" onclick="toggleSection(this)">BACKGROUND <span class="chevron">▾</span></div>
+        <div class="section-body">
+          ${rowSel('Type', f[F.bgType])}
+          ${row('Luminance', f[F.bgLum])}
+          ${row('Size', f[F.bgSize])}
+          ${rowSel('Colors', f[F.bgColor])}
+        </div>
+      </div>
+
+      <!-- Fixation -->
+      <div class="detail-section">
+        <div class="section-head open" onclick="toggleSection(this)">FIXATION MONITOR <span class="chevron">▾</span></div>
+        <div class="section-body">
+          ${rowSel('Type', f[F.fixType])}
+          ${row('Note', f[F.fixNote])}
+        </div>
+      </div>
+
+      <!-- Range & Measurement -->
+      <div class="detail-section">
+        <div class="section-head open" onclick="toggleSection(this)">RANGE & MEASUREMENT <span class="chevron">▾</span></div>
+        <div class="section-body">
+          ${row('Central Range', f[F.centralRange])}
+          ${row('Peripheral Range', f[F.peripheralRange])}
+          ${row('Measurement Dist.', f[F.measDist])}
+        </div>
+      </div>
+
+      <!-- Physical Specs -->
+      <div class="detail-section">
+        <div class="section-head" onclick="toggleSection(this)">PHYSICAL SPECIFICATIONS <span class="chevron">▾</span></div>
+        <div class="section-body collapsed">
+          ${row('Dimensions', f[F.dims])}
+          ${f[F.width] ? row('Width', f[F.width] + ' mm') : ''}
+          ${f[F.depth] ? row('Depth', f[F.depth] + ' mm') : ''}
+          ${f[F.height] ? row('Height', f[F.height] + ' mm') : ''}
+          ${f[F.weight] ? row('Weight', f[F.weight] + ' kg') : ''}
+        </div>
+      </div>
+
+      <!-- Data & Connectivity -->
+      <div class="detail-section">
+        <div class="section-head" onclick="toggleSection(this)">DATA & CONNECTIVITY <span class="chevron">▾</span></div>
+        <div class="section-body collapsed">
+          ${row('Analysis', f[F.analysis])}
+          ${rowSel('Storage', f[F.storage])}
+          ${row('Connectivity', f[F.connectivity])}
+          ${rowSel('Intended Use', f[F.intendedUse])}
+        </div>
+      </div>
+
+      <!-- Strategies -->
+      ${strat ? `
+      <div class="detail-section full-width">
+        <div class="section-head open" onclick="toggleSection(this)">TEST STRATEGIES <span class="chevron">▾</span></div>
+        <div class="section-body">
+          <div class="strategies-block">${stratHtml}</div>
+        </div>
+      </div>` : ''}
+
+      <!-- Test Programs (patterns text) -->
+      ${f[F.patterns] ? `
+      <div class="detail-section full-width">
+        <div class="section-head open" onclick="toggleSection(this)">TEST PROGRAMS <span class="chevron">▾</span></div>
+        <div class="section-body">
+          <div class="strategies-block">${esc(f[F.patterns])}</div>
+          <div id="pfGrid" style="margin-top:16px"><div class="loading"><div class="spinner"></div><p>Loading patterns...</p></div></div>
+        </div>
+      </div>` : `<div class="detail-section full-width"><div id="pfGrid"></div></div>`}
+
+      <!-- Reliability -->
+      ${(f[F.fpDetection] || f[F.fnDetection] || f[F.retestMethod] || f[F.reliabilityNote]) ? `
+      <div class="detail-section full-width">
+        <div class="section-head" onclick="toggleSection(this)">RELIABILITY <span class="chevron">▾</span></div>
+        <div class="section-body collapsed">
+          <div class="reliability-grid">
+            ${f[F.fpDetection] ? `<div class="rel-item"><div class="rel-label">FP Detection</div><div class="rel-value">${esc(f[F.fpDetection])}</div></div>` : ''}
+            ${f[F.fnDetection] ? `<div class="rel-item"><div class="rel-label">FN Detection</div><div class="rel-value">${esc(f[F.fnDetection])}</div></div>` : ''}
+            ${f[F.retestMethod] ? `<div class="rel-item"><div class="rel-label">Retest Method</div><div class="rel-value">${esc(f[F.retestMethod])}</div></div>` : ''}
+            ${f[F.reliabilityNote] ? `<div class="rel-item"><div class="rel-label">Note</div><div class="rel-value">${esc(f[F.reliabilityNote])}</div></div>` : ''}
+          </div>
+        </div>
+      </div>` : ''}
+
+      <!-- Special Comments -->
+      ${f[F.specialComments] ? `
+      <div class="detail-section full-width">
+        <div class="section-head" onclick="toggleSection(this)">SPECIAL COMMENTS <span class="chevron">▾</span></div>
+        <div class="section-body collapsed">
+          <div class="comments-block">${esc(f[F.specialComments])}</div>
+        </div>
+      </div>` : ''}
+
+      <!-- References -->
+      ${refs ? `
+      <div class="detail-section full-width">
+        <div class="section-head" onclick="toggleSection(this)">REFERENCES <span class="chevron">▾</span></div>
+        <div class="section-body collapsed">
+          <div class="references-block">${esc(refs)}</div>
+        </div>
+      </div>` : ''}
+
+    </div>
+  `;
+  $app.innerHTML = html;
+
+  // Load PF grid
+  const pfRecords = await pfPromise;
+  const pfGrid = document.getElementById('pfGrid');
+  if (pfGrid && pfRecords.length) {
+    let pgHtml = '<div class="pattern-grid">';
+    pfRecords.forEach(pf => {
+      const pf_ = pf.fields || {};
+      const name = pf_[PF.name] || '';
+      const cat = sel(pf_[PF.category]);
+      const pts = pf_[PF.pointCount] || '';
+      const imgOD = pf_[PF.imageOD];
+      const imgSrc = imgOD && imgOD.length ? (imgOD[0].thumbnails?.large?.url || imgOD[0].url) : '';
+      pgHtml += `
+        <div class="pattern-card" onclick="location.hash='#pattern/${pf.id}/${recId}'">
+          <div class="pname">${esc(name)}</div>
+          <div class="pcat">${esc(cat)}</div>
+          ${pts ? `<div class="pcount">${pts} points</div>` : ''}
+          ${imgSrc ? `<img src="${imgSrc}" alt="${esc(name)}" loading="lazy">` : ''}
+        </div>
+      `;
+    });
+    pgHtml += '</div>';
+    pfGrid.innerHTML = pgHtml;
+  } else if (pfGrid) {
+    pfGrid.innerHTML = '';
+  }
+}
+
+// ── Level 3: Pattern Detail ──
+async function renderPattern(pfId, modelId) {
+  const rec = allRecords.find(r => r.id === modelId);
+  const productName = rec ? (rec.fields?.[F.productName] || rec.fields?.[F.model] || '') : '';
+  const modelName = rec ? (rec.fields?.[F.model] || '') : '';
+
+  // Fetch PF record
+  let pfRec = null;
+  const cached = pfCache[modelId];
+  if (cached) pfRec = cached.find(p => p.id === pfId);
+  if (!pfRec) {
+    // Fetch directly
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${PF_TABLE}/${pfId}?returnFieldsByFieldId=true`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    if (res.ok) pfRec = await res.json();
+  }
+  if (!pfRec) { $app.innerHTML = '<p>Pattern not found.</p>'; return; }
+
+  const pf = pfRec.fields || {};
+  const patName = pf[PF.name] || '';
+
+  setBreadcrumb([
+    { label: 'Catalog', hash: '#' },
+    { label: productName, hash: `#product/${encodeURIComponent(productName)}` },
+    { label: modelName, hash: `#model/${modelId}` },
+    { label: patName, hash: `#pattern/${pfId}/${modelId}` },
+  ]);
+
+  const row = (label, val) => val ? `<div class="spec-row"><div class="spec-label">${label}</div><div class="spec-value">${esc(String(val))}</div></div>` : '';
+
+  const imgOD = pf[PF.imageOD];
+  const imgOS = pf[PF.imageOS];
+  const osMirror = pf[PF.osMirror];
+  const coordsRaw = pf[PF.coordsOD];
+
+  // Parse coordinates
+  let coords = [];
+  if (coordsRaw) {
+    try { coords = JSON.parse(coordsRaw); } catch(e) {}
+  }
+
+  let html = `
+    <div class="detail-header">
+      <div class="detail-title">${esc(patName)}</div>
+      <div class="detail-sub">
+        <span>${esc(sel(pf[PF.category]))}</span>
+        <span>${pf[PF.pointCount] ? pf[PF.pointCount]+' points' : ''}</span>
+        <span>${esc(sel(pf[PF.measMode]))}</span>
+        <span>${esc(sel(pf[PF.eyeVariant]))}</span>
+      </div>
+    </div>
+    
+    ${pf[PF.description] ? `<p style="color:var(--text2);margin-bottom:16px;font-size:13px">${esc(pf[PF.description])}</p>` : ''}
+
+    ${osMirror ? '<p style="color:var(--amber);font-size:12px;font-family:var(--mono);margin-bottom:16px">OS = Mirror of OD (left-right reflected)</p>' : ''}
+    
+    <div class="pattern-detail-grid">
+      <div>
+        <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">OD Pattern</h3>
+        <div class="pattern-image-wrap">
+          ${imgOD && imgOD.length ? `<img src="${imgOD[0].url}" alt="OD" onclick="openLightbox('${imgOD[0].url}')" style="cursor:pointer">` : '<p style="color:var(--text3);font-size:13px">No image available</p>'}
+        </div>
+      </div>
+      <div>
+        ${imgOS && imgOS.length ? `
+          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">OS Pattern</h3>
+          <div class="pattern-image-wrap">
+            <img src="${imgOS[0].url}" alt="OS" onclick="openLightbox('${imgOS[0].url}')" style="cursor:pointer">
+          </div>
+        ` : ''}
+        ${coords.length ? `
+          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Point Coordinates (${coords.length} points)</h3>
+          <div class="coord-table">
+            <table>
+              <tr><th>#</th><th>X</th><th>Y</th>${coords[0]?.count ? '<th>Count</th>' : ''}</tr>
+              ${coords.map((c,i) => `<tr><td>${i+1}</td><td>${c.x}</td><td>${c.y}</td>${c.count ? `<td>${c.count}</td>` : ''}</tr>`).join('')}
+            </table>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+
+    ${pf[PF.uncertaintyNotes] ? `
+    <div class="detail-section full-width" style="margin-top:16px">
+      <div class="section-head open" onclick="toggleSection(this)">UNCERTAINTY NOTES <span class="chevron">▾</span></div>
+      <div class="section-body">
+        <div class="comments-block">${esc(pf[PF.uncertaintyNotes])}</div>
+      </div>
+    </div>` : ''}
+  `;
+  $app.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SECTION TOGGLE
+// ═══════════════════════════════════════════════════════════════
+function toggleSection(el) {
+  el.classList.toggle('open');
+  const body = el.nextElementSibling;
+  if (body) body.classList.toggle('collapsed');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════════════
+function route() {
+  const hash = location.hash || '#';
+  const parts = hash.slice(1).split('/');
+  const level = parts[0];
+  
+  if (level === 'product' && parts[1]) {
+    renderProduct(decodeURIComponent(parts[1]));
+  } else if (level === 'model' && parts[1]) {
+    renderModel(parts[1]);
+  } else if (level === 'pattern' && parts[1]) {
+    renderPattern(parts[1], parts[2] || '');
+  } else {
+    renderProducts();
+  }
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+async function init() {
+  try {
+    allRecords = await fetchAllMain();
+    // Normalize: put cellValuesByFieldId into fields
+    allRecords.forEach(r => {
+      if (r.cellValuesByFieldId && !r.fields) r.fields = r.cellValuesByFieldId;
+      if (!r.fields) r.fields = {};
+    });
+    window.addEventListener('hashchange', route);
+    route();
+  } catch(e) {
+    $app.innerHTML = `<div class="loading"><p style="color:var(--red)">Error loading data: ${esc(e.message)}</p></div>`;
+    console.error(e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
