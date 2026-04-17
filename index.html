@@ -174,7 +174,7 @@ a:hover { text-decoration: underline; }
   cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s;
 }
 .lightbox.open { opacity: 1; pointer-events: auto; }
-.lightbox img { max-width: 92vw; max-height: 92vh; border-radius: var(--radius); object-fit: contain; transition: opacity .15s; }
+.lightbox img { max-width: 92vw; max-height: 92vh; border-radius: var(--radius); object-fit: contain; }
 .lightbox-close {
   position: absolute; top: 16px; right: 20px; font-size: 28px;
   color: #fff; cursor: pointer; opacity: .7;
@@ -468,17 +468,17 @@ function groupProducts(records) {
 // LIGHTBOX
 // ═══════════════════════════════════════════════════════════════
 function openLightbox(src) {
+  const lb = document.getElementById('lightbox');
   const img = document.getElementById('lightboxImg');
-  img.style.opacity = '0';
-  img.src = src;
-  img.onload = () => { img.style.opacity = '1'; };
-  document.getElementById('lightbox').classList.add('open');
+  img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  lb.classList.add('open');
+  const pre = new Image();
+  pre.onload = () => { img.src = src; };
+  pre.src = src;
 }
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
-  const img = document.getElementById('lightboxImg');
-  img.src = '';
-  img.style.opacity = '0';
+  document.getElementById('lightboxImg').src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
