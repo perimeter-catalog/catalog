@@ -467,18 +467,24 @@ function groupProducts(records) {
 // ═══════════════════════════════════════════════════════════════
 // LIGHTBOX
 // ═══════════════════════════════════════════════════════════════
+let lightboxOpen = false;
 function openLightbox(src) {
   const lb = document.getElementById('lightbox');
   const img = document.getElementById('lightboxImg');
   img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
   lb.classList.add('open');
+  lightboxOpen = true;
+  history.pushState({ lightbox: true }, '');
   const pre = new Image();
   pre.onload = () => { img.src = src; };
   pre.src = src;
 }
-function closeLightbox() {
+function closeLightbox(fromPopstate) {
+  if (!lightboxOpen) return;
   document.getElementById('lightbox').classList.remove('open');
   document.getElementById('lightboxImg').src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  lightboxOpen = false;
+  if (!fromPopstate) history.back();
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
@@ -940,6 +946,9 @@ async function init() {
       if (!r.fields) r.fields = {};
     });
     window.addEventListener('hashchange', route);
+    window.addEventListener('popstate', e => {
+      if (lightboxOpen) closeLightbox(true);
+    });
     route();
   } catch(e) {
     $app.innerHTML = `<div class="loading"><p style="color:var(--red)">Error loading data: ${esc(e.message)}</p></div>`;
