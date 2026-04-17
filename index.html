@@ -409,7 +409,6 @@ async function fetchPFForModel(recId) {
     let url = `https://api.airtable.com/v0/${BASE_ID}/${PF_TABLE}?returnFieldsByFieldId=true&pageSize=100`;
     fields.forEach(f => url += `&fields%5B%5D=${f}`);
     url += `&filterByFormula=${encodeURIComponent(formula)}`;
-    url += `&sort%5B0%5D%5Bfield%5D=${PF.so}&sort%5B0%5D%5Bdirection%5D=asc`;
     try {
       const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
       if (res.ok) {
@@ -418,6 +417,9 @@ async function fetchPFForModel(recId) {
       }
     } catch(e) { console.error('PF fetch error:', e); }
   }
+  // Sort by PatternsLinked array order (preserves Test Patterns listing order)
+  const idOrder = new Map(pfIds.map((id, i) => [id, i]));
+  allPF.sort((a, b) => (idOrder.get(a.id) ?? 999) - (idOrder.get(b.id) ?? 999));
   pfCache[recId] = allPF;
   return allPF;
 }
