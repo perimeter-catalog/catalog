@@ -467,24 +467,35 @@ function groupProducts(records) {
 // ═══════════════════════════════════════════════════════════════
 // LIGHTBOX
 // ═══════════════════════════════════════════════════════════════
-let lightboxOpen = false;
+const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+let lbHistoryPushed = false;
+let lbPreloader = null;
 function openLightbox(src) {
   const lb = document.getElementById('lightbox');
   const img = document.getElementById('lightboxImg');
-  img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  if (lbPreloader) lbPreloader.onload = null;
+  img.src = BLANK_GIF;
   lb.classList.add('open');
-  lightboxOpen = true;
+  lbHistoryPushed = true;
   history.pushState({ lightbox: true }, '');
-  const pre = new Image();
-  pre.onload = () => { img.src = src; };
-  pre.src = src;
+  lbPreloader = new Image();
+  lbPreloader.onload = () => {
+    if (lb.classList.contains('open')) img.src = src;
+  };
+  lbPreloader.src = src;
 }
 function closeLightbox(fromPopstate) {
-  if (!lightboxOpen) return;
-  document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lightboxImg').src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-  lightboxOpen = false;
-  if (!fromPopstate) history.back();
+  const lb = document.getElementById('lightbox');
+  if (!lb.classList.contains('open')) return;
+  if (lbPreloader) { lbPreloader.onload = null; lbPreloader = null; }
+  lb.classList.remove('open');
+  document.getElementById('lightboxImg').src = BLANK_GIF;
+  if (!fromPopstate && lbHistoryPushed) {
+    lbHistoryPushed = false;
+    history.back();
+  } else {
+    lbHistoryPushed = false;
+  }
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
@@ -947,7 +958,9 @@ async function init() {
     });
     window.addEventListener('hashchange', route);
     window.addEventListener('popstate', e => {
-      if (lightboxOpen) closeLightbox(true);
+      if (document.getElementById('lightbox').classList.contains('open')) {
+        closeLightbox(true);
+      }
     });
     route();
   } catch(e) {
