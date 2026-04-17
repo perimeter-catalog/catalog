@@ -4,13 +4,13 @@ var BASE='appjzmUh919TATEdP';
 var MT='tblZb6Bxpy1vcovjl';
 var PT='tbl5aqQ4wVa4HrXdN';
 var MF='fldqnBgK33iSKtvPM,fldysRdi3QHsumrk9,fldaxoYmuozwWClgj,fldwxHiGz8OOTK1ZL,fldTpPXnv7lFGBuSb,fld9QZpSdodLphTkC,fldz85WeLvVQ70ycO,fldV7xd0gzWVFfv8I,fldHNYd7OPMeK6gH9,fldvJjR5YpuRKq0ha,fldrgX1TjqjllJMl6,fldiKzaVZKG9pvPaa,fld4lhLn23Gj1hetk,fldlGPjfjW0AionIX,flddBmHiIMowyhmKZ,fld3WdZm8FYQRPmVH,fldZG35byV7736peR,fldoraPYeEH7xoXGa,fld7YgjnccYZfcpI7,fldIJxcXlwugH40xg,fldDquqy8foSQqZhP,fldw7yrn4wTi5JqRv,fldh1UQFAkbcbRr3j'.split(',');
-var PF='fldgebF1PjDUn0uS2,fld9VZHopFhwxunAE,fldjmQJSfPz95Ql3Z,fld5vxKF3FdUa7F1f,fldGOtejbDbaKBlmu,fldQ5idxvt3YcS3hU,fldRuvaZs6EDk6DMg,fldFA7EP0lTqCjyyM,fldBnpVw9nrtsDWrM,fldA40icdOGmJjm6f,fldFWVwTwAVUcAyCY,fld6gVu0xkSnyjoi3,fldJs6ucpY4TqghW5,fldck5K4l6wX6fERE,fldkYCGIDqxRa0iCk'.split(',');
+var PFF='fldgebF1PjDUn0uS2,fld9VZHopFhwxunAE,fldjmQJSfPz95Ql3Z,fld5vxKF3FdUa7F1f,fldGOtejbDbaKBlmu,fldQ5idxvt3YcS3hU,fldRuvaZs6EDk6DMg,fldFA7EP0lTqCjyyM,fldBnpVw9nrtsDWrM,fldA40icdOGmJjm6f,fldFWVwTwAVUcAyCY,fld6gVu0xkSnyjoi3,fldJs6ucpY4TqghW5,fldck5K4l6wX6fERE,fldkYCGIDqxRa0iCk'.split(',');
 var mr=[],pr=[],pb={},ct,ex={},cr=function(){};
 async function fa(t,ff){
   var a=[],o=null;
   var fp=ff.map(function(x){return'fields%5B%5D='+x}).join('&');
   do{
-    var u='https://api.airtable.com/v0/'+BASE+'/'+t+'?pageSize=100&'+fp+(o?'&offset='+o:'');
+    var u='https://api.airtable.com/v0/'+BASE+'/'+t+'?returnFieldsByFieldId=true&pageSize=100&'+fp+(o?'&offset='+o:'');
     var r=await fetch(u,{headers:{'Authorization':'Bearer '+TK}});
     var d=await r.json();
     if(d.error){throw new Error(d.error.message||d.error.type);}
@@ -74,7 +74,7 @@ function r3(mi,pi){
 async function init(){
   ct=document.getElementById('content');
   try{
-    var r=await Promise.all([fa(MT,MF),fa(PT,PF)]);
+    var r=await Promise.all([fa(MT,MF),fa(PT,PFF)]);
     mr=r[0];pr=r[1];pb={};
     for(var i=0;i<pr.length;i++)pb[pr[i].id]=pr[i];
     r0();
