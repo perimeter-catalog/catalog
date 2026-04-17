@@ -306,7 +306,6 @@ const F = {
   patternsLinked: 'fldiKzaVZKG9pvPaa',
   intendedUse: 'fldZG35byV7736peR',
   // Range
-  centralRange: 'fldh1UQFAkbcbRr3j',
   peripheralRange: 'fldOeF8kFfLTzbG3r',
   measDist: 'fldmlK2KqozIjkpNf',
   // Analysis/Storage/Connectivity
@@ -364,7 +363,7 @@ async function fetchAllMain() {
     F.bgType, F.bgSummary, F.bgLum, F.bgSize, F.bgColor,
     F.fixType, F.fixNote, F.fixMonitor,
     F.strategies, F.patterns, F.patternsLinked, F.intendedUse,
-    F.centralRange, F.peripheralRange, F.measDist,
+    F.peripheralRange, F.measDist,
     F.analysis, F.storage, F.connectivity,
     F.width, F.depth, F.height, F.weight, F.dims,
     F.fpDetection, F.fnDetection, F.retestMethod, F.reliabilityNote,
@@ -713,7 +712,6 @@ async function renderModel(recId) {
       <div class="detail-section">
         <div class="section-head open" onclick="toggleSection(this)">RANGE & MEASUREMENT <span class="chevron">▾</span></div>
         <div class="section-body">
-          ${row('Central Range', f[F.centralRange])}
           ${row('Peripheral Range', f[F.peripheralRange])}
           ${row('Measurement Dist.', f[F.measDist])}
         </div>
