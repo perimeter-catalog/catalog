@@ -696,6 +696,8 @@ async function renderModel(recId) {
           ${row('Luminance', f[F.bgLum])}
           ${row('Size', f[F.bgSize])}
           ${rowSel('Colors', f[F.bgColor])}
+          ${row('Peripheral Range', f[F.peripheralRange])}
+          ${row('Measurement Dist.', f[F.measDist])}
         </div>
       </div>
 
@@ -705,15 +707,6 @@ async function renderModel(recId) {
         <div class="section-body">
           ${rowSel('Type', f[F.fixType])}
           ${row('Note', f[F.fixNote])}
-        </div>
-      </div>
-
-      <!-- Range & Measurement -->
-      <div class="detail-section">
-        <div class="section-head open" onclick="toggleSection(this)">RANGE & MEASUREMENT <span class="chevron">▾</span></div>
-        <div class="section-body">
-          ${row('Peripheral Range', f[F.peripheralRange])}
-          ${row('Measurement Dist.', f[F.measDist])}
         </div>
       </div>
 
