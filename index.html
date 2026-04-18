@@ -308,10 +308,9 @@ const F = {
   // Range
   peripheralRange: 'fldOeF8kFfLTzbG3r',
   measDist: 'fldmlK2KqozIjkpNf',
-  // Analysis/Storage/Connectivity
+  // Analysis/Platform
   analysis: 'fld4lhLn23Gj1hetk',
-  storage: 'fldlGPjfjW0AionIX',
-  connectivity: 'fld3WdZm8FYQRPmVH',
+  platformNotes: 'fld3WdZm8FYQRPmVH',
   // Physical
   width: 'fldMPqPoe9RXlxvZo',
   depth: 'fldQx0eYjgEKyCcJE',
@@ -364,7 +363,7 @@ async function fetchAllMain() {
     F.fixType, F.fixNote, F.fixMonitor,
     F.strategies, F.patterns, F.patternsLinked, F.intendedUse,
     F.peripheralRange, F.measDist,
-    F.analysis, F.storage, F.connectivity,
+    F.analysis, F.platformNotes,
     F.width, F.depth, F.height, F.weight, F.dims,
     F.fpDetection, F.fnDetection, F.retestMethod, F.reliabilityNote,
     F.mfrUrl, F.image,
@@ -721,13 +720,12 @@ async function renderModel(recId) {
         </div>
       </div>
 
-      <!-- Data & Connectivity -->
+      <!-- Analysis & Platform -->
       <div class="detail-section">
-        <div class="section-head" onclick="toggleSection(this)">DATA & CONNECTIVITY <span class="chevron">▾</span></div>
+        <div class="section-head" onclick="toggleSection(this)">ANALYSIS & PLATFORM <span class="chevron">▾</span></div>
         <div class="section-body collapsed">
           ${row('Analysis', f[F.analysis])}
-          ${rowSel('Storage', f[F.storage])}
-          ${row('Connectivity', f[F.connectivity])}
+          ${row('Platform Notes', f[F.platformNotes])}
           ${rowSel('Intended Use', f[F.intendedUse])}
         </div>
       </div>
