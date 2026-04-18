@@ -632,6 +632,11 @@ async function renderModel(recId) {
   ]);
 
   // Helper
+  function fmtSections(text) {
+    if (!text) return '';
+    return esc(String(text))
+      .replace(/\[([^\]]+)\]/g, '<span class="section-label">[$1]</span>');
+  }
   const row = (label, val) => val ? `<div class="spec-row"><div class="spec-label">${label}</div><div class="spec-value">${esc(String(val))}</div></div>` : '';
   const rowSel = (label, val) => { const s = multiSel(val); return s ? row(label, s) : ''; };
 
@@ -720,15 +725,24 @@ async function renderModel(recId) {
         </div>
       </div>
 
-      <!-- Analysis & Platform -->
-      <div class="detail-section">
-        <div class="section-head" onclick="toggleSection(this)">ANALYSIS & PLATFORM <span class="chevron">▾</span></div>
+      <!-- Analysis -->
+      ${f[F.analysis] ? `
+      <div class="detail-section full-width">
+        <div class="section-head" onclick="toggleSection(this)">ANALYSIS <span class="chevron">▾</span></div>
         <div class="section-body collapsed">
-          ${row('Analysis', f[F.analysis])}
-          ${row('Platform Notes', f[F.platformNotes])}
+          <div class="strategies-block">${fmtSections(f[F.analysis])}</div>
+        </div>
+      </div>` : ''}
+
+      <!-- Platform -->
+      ${f[F.platformNotes] || f[F.intendedUse] ? `
+      <div class="detail-section full-width">
+        <div class="section-head" onclick="toggleSection(this)">PLATFORM <span class="chevron">▾</span></div>
+        <div class="section-body collapsed">
+          ${f[F.platformNotes] ? `<div class="strategies-block">${fmtSections(f[F.platformNotes])}</div>` : ''}
           ${rowSel('Intended Use', f[F.intendedUse])}
         </div>
-      </div>
+      </div>` : ''}
 
       <!-- Strategies -->
       ${strat ? `
