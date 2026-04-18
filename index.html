@@ -160,12 +160,19 @@ a:hover { text-decoration: underline; }
 
 /* ── Image gallery ── */
 .image-gallery { display: flex; gap: 8px; flex-wrap: wrap; }
+.image-gallery figure {
+  margin: 0; max-width: 200px; text-align: center;
+}
 .image-gallery img { 
   max-width: 200px; max-height: 200px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); cursor: pointer; transition: transform .15s;
   object-fit: contain; background: var(--bg);
 }
 .image-gallery img:hover { transform: scale(1.03); border-color: var(--accent); }
+.image-gallery figcaption {
+  font-size: 11px; color: var(--muted); margin-top: 4px;
+  line-height: 1.3; word-break: break-word;
+}
 
 /* ── Lightbox ── */
 .lightbox {
@@ -637,6 +644,12 @@ async function renderModel(recId) {
     return esc(String(text))
       .replace(/\[([^\]]+)\]/g, '<span class="section-label">[$1]</span>');
   }
+  function imgCaption(filename) {
+    if (!filename) return '';
+    const name = filename.replace(/\.[^.]+$/, '');
+    if (/^(image|IMG_|DSC|photo|screenshot|upload)/i.test(name)) return '';
+    return esc(name);
+  }
   const row = (label, val) => val ? `<div class="spec-row"><div class="spec-label">${label}</div><div class="spec-value">${esc(String(val))}</div></div>` : '';
   const rowSel = (label, val) => { const s = multiSel(val); return s ? row(label, s) : ''; };
 
@@ -672,7 +685,7 @@ async function renderModel(recId) {
       <div class="section-head open" onclick="toggleSection(this)">PHOTOS (${images.length}) <span class="chevron">▾</span></div>
       <div class="section-body">
         <div class="image-gallery">
-          ${images.map(img => `<img src="${img.thumbnails?.large?.url || img.url}" alt="${esc(modelName)}" onclick="openLightbox('${img.url}')">`).join('')}
+          ${images.map(img => { const cap = imgCaption(img.filename); return `<figure><img src="${img.thumbnails?.large?.url || img.url}" alt="${cap || esc(modelName)}" onclick="openLightbox('${img.url}')">${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; }).join('')}
         </div>
       </div>
     </div>` : ''}
