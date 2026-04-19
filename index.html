@@ -38,7 +38,9 @@ a:hover { text-decoration: underline; }
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   background: var(--bg2); position: sticky; top: 0; z-index: 100;
 }
-.site-title { font-size: 15px; font-weight: 600; letter-spacing: .06em; color: var(--text2); }
+.site-title { font-size: 15px; font-weight: 600; letter-spacing: .06em; color: var(--text2); cursor: pointer; user-select: none; transition: color .15s ease; }
+.site-title:hover { color: var(--text); }
+.site-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
 .site-title span { color: var(--accent); }
 .header-meta { font-size: 12px; color: var(--text3); font-family: var(--mono); }
 
@@ -251,7 +253,9 @@ a:hover { text-decoration: underline; }
 <body>
 
 <header class="site-header">
-  <div class="site-title"><span>//</span> AUTOMATED PERIMETER CATALOG</div>
+  <div class="site-title" role="link" tabindex="0" title="Back to catalog root"
+       onclick="goHome()"
+       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span>//</span> AUTOMATED PERIMETER CATALOG</div>
   <div class="header-meta" id="headerMeta">Loading...</div>
 </header>
 <nav class="breadcrumb" id="breadcrumb"></nav>
@@ -991,8 +995,23 @@ function toggleSection(el) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ROUTER
+// NAVIGATION / ROUTER
 // ═══════════════════════════════════════════════════════════════
+function goHome() {
+  // Close lightbox if open
+  const lb = document.getElementById('lightbox');
+  if (lb && lb.classList.contains('open')) closeLightbox(true);
+  // If already at root, re-render (hashchange won't fire for same hash)
+  if (!location.hash || location.hash === '#') {
+    renderProducts();
+    window.scrollTo(0, 0);
+  } else {
+    // Use pushState to cleanly remove hash without leaving '#' in URL
+    history.pushState(null, '', location.pathname + location.search);
+    route();
+  }
+}
+
 function route() {
   const hash = location.hash || '#';
   const parts = hash.slice(1).split('/');
