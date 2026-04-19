@@ -194,6 +194,8 @@ a:hover { text-decoration: underline; }
 
 /* ── References ── */
 .references-block { font-size: 12px; color: var(--text2); white-space: pre-wrap; line-height: 1.7; font-family: var(--mono); }
+.references-block a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); word-break: break-all; }
+.references-block a:hover { text-decoration: none; border-bottom-style: solid; color: var(--accent2); }
 
 /* ── Pattern grid ── */
 .pattern-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
@@ -446,6 +448,54 @@ function multiSel(v) {
 }
 function esc(s) { 
   const d = document.createElement('div'); d.textContent = s; return d.innerHTML; 
+}
+// Auto-linkify PMID / PMC / DOI / plain URLs inside already-HTML-escaped text.
+// Input MUST come from esc() or equivalent (no untrusted HTML).
+function linkifyRefs(escapedText) {
+  const PM_URL  = 'https://pubmed.ncbi.nlm.nih.gov/';
+  const PMC_URL = 'https://www.ncbi.nlm.nih.gov/pmc/articles/';
+  const DOI_URL = 'https://doi.org/';
+  const A = (href, label) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+
+  let t = escapedText;
+
+  // 1) PMID: 12345678  /  PMID:12345678  /  PMID 12345678
+  t = t.replace(/\bPMID[:：]?\s*(\d{5,9})\b/gi,
+    (match, id) => A(`${PM_URL}${id}/`, match));
+
+  // 2) PMC1234567
+  t = t.replace(/\bPMC(\d{4,9})\b/g,
+    (match) => A(`${PMC_URL}${match}/`, match));
+
+  // 3) doi: 10.xxxx/yyy  (preserve original "doi:" / "DOI:" prefix; trim trailing punctuation from DOI)
+  t = t.replace(/\b(doi[:：]\s*)(10\.\d{4,9}\/[^\s<>"()\[\]]+)/gi,
+    (match, prefix, doi) => {
+      const clean = doi.replace(/[.,;:]+$/, '');
+      const trailing = doi.slice(clean.length);
+      return `${prefix}${A(`${DOI_URL}${clean}`, clean)}${trailing}`;
+    });
+
+  // 4) Plain URLs — avoid re-linkifying URLs inside anchors added above.
+  //    Split around existing <a>...</a> tags; only linkify in the text segments.
+  const parts = [];
+  let last = 0;
+  const anchorRe = /<a\s[^>]*>[\s\S]*?<\/a>/g;
+  let m;
+  while ((m = anchorRe.exec(t)) !== null) {
+    parts.push(t.slice(last, m.index));
+    parts.push(m[0]);
+    last = m.index + m[0].length;
+  }
+  parts.push(t.slice(last));
+  const urlRe = /(https?:\/\/[^\s<>"()]+)/g;
+  return parts.map((p, i) => {
+    if (i % 2 === 1) return p; // existing anchor, skip
+    return p.replace(urlRe, (url) => {
+      const clean = url.replace(/[.,;:!?]+$/, '');
+      const trailing = url.slice(clean.length);
+      return `${A(clean, clean)}${trailing}`;
+    });
+  }).join('');
 }
 function flagImg(rec) {
   const flagArr = rec.fields?.[F.flag];
@@ -804,7 +854,7 @@ async function renderModel(recId) {
       <div class="detail-section full-width">
         <div class="section-head" onclick="toggleSection(this)">REFERENCES <span class="chevron">▾</span></div>
         <div class="section-body collapsed">
-          <div class="references-block">${esc(refs)}</div>
+          <div class="references-block">${linkifyRefs(esc(refs))}</div>
         </div>
       </div>` : ''}
 
