@@ -313,7 +313,6 @@ const F = {
   strategies: 'fldvJjR5YpuRKq0ha',
   patterns: 'fldrgX1TjqjllJMl6',
   patternsLinked: 'fldiKzaVZKG9pvPaa',
-  intendedUse: 'fldZG35byV7736peR',
   // Range
   peripheralRange: 'fldOeF8kFfLTzbG3r',
   measDist: 'fldmlK2KqozIjkpNf',
@@ -370,7 +369,7 @@ async function fetchAllMain() {
     F.stimType, F.stimLum, F.stimSizes, F.stimDuration, F.stimColors, F.stimInterval, F.stimNumber, F.stimSummary,
     F.bgType, F.bgSummary, F.bgLum, F.bgSize, F.bgColor,
     F.fixType, F.fixNote, F.fixMonitor,
-    F.strategies, F.patterns, F.patternsLinked, F.intendedUse,
+    F.strategies, F.patterns, F.patternsLinked,
     F.peripheralRange, F.measDist,
     F.analysis, F.platformNotes,
     F.width, F.depth, F.height, F.weight, F.dims,
@@ -798,12 +797,11 @@ async function renderModel(recId) {
       </div>` : ''}
 
       <!-- Platform -->
-      ${f[F.platformNotes] || f[F.intendedUse] ? `
+      ${f[F.platformNotes] ? `
       <div class="detail-section full-width">
         <div class="section-head" onclick="toggleSection(this)">PLATFORM <span class="chevron">▾</span></div>
         <div class="section-body collapsed">
-          ${f[F.platformNotes] ? `<div class="strategies-block">${fmtSections(f[F.platformNotes])}</div>` : ''}
-          ${rowSel('Intended Use', f[F.intendedUse])}
+          <div class="strategies-block">${fmtSections(f[F.platformNotes])}</div>
         </div>
       </div>` : ''}
 
