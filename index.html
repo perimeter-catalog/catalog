@@ -1066,19 +1066,25 @@ async function renderPattern(pfId, modelId) {
             <img src="${imgOS[0].url}" alt="OS" onclick="openLightbox('${imgOS[0].url}')" style="cursor:pointer">
           </div>
         ` : ''}
-        ${coords.length ? `
-          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Point Coordinates (${coords.length} points${isPolar ? ', polar' : ''})</h3>
+        ${coords.length ? (() => {
+          const testPts = coords.filter(c => !c.type);
+          const markers = coords.filter(c => c.type);
+          const totalLabel = markers.length > 0
+            ? `${testPts.length} test points + ${markers.length} marker${markers.length>1?'s':''}${isPolar ? ', polar' : ''}`
+            : `${coords.length} points${isPolar ? ', polar' : ''}`;
+          return `
+          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Point Coordinates (${totalLabel})</h3>
           <div class="coord-table">
             <table>
               ${isPolar
-                ? `<tr><th>#</th><th>r (°)</th><th>θ (°)</th>${coords[0]?.count ? '<th>Count</th>' : ''}</tr>
-                   ${coords.map((c,i) => `<tr><td>${i+1}</td><td>${c.r}</td><td>${c.theta}</td>${c.count ? `<td>${c.count}</td>` : ''}</tr>`).join('')}`
+                ? `<tr><th>#</th><th>r (°)</th><th>θ (°)</th>${coords[0]?.type !== undefined || coords.some(c=>c.type) ? '<th>Type</th>' : ''}${coords[0]?.count ? '<th>Count</th>' : ''}</tr>
+                   ${coords.map((c,i) => `<tr><td>${i+1}</td><td>${c.r}</td><td>${c.theta}</td>${coords.some(cc=>cc.type) ? `<td>${c.type || 'test'}</td>` : ''}${c.count ? `<td>${c.count}</td>` : ''}</tr>`).join('')}`
                 : `<tr><th>#</th><th>X</th><th>Y</th>${coords[0]?.count ? '<th>Count</th>' : ''}</tr>
                    ${coords.map((c,i) => `<tr><td>${i+1}</td><td>${c.x}</td><td>${c.y}</td>${c.count ? `<td>${c.count}</td>` : ''}</tr>`).join('')}`
               }
             </table>
           </div>
-        ` : ''}
+        `;})() : ''}
       </div>
     </div>
 
