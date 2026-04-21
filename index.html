@@ -409,6 +409,9 @@ const PF = {
   eyeVariant: 'fldBnpVw9nrtsDWrM',
   uncertaintyNotes: 'fldJs6ucpY4TqghW5',
   coordsOD: 'fldA40icdOGmJjm6f',
+  coordsOS: 'fldFWVwTwAVUcAyCY',
+  coordsOdPolar: 'fldkv1UL0IT4zIFAV',
+  coordsOsPolar: 'fldBDbh2OpDQvCCoX',
   osMirror: 'fld6gVu0xkSnyjoi3',
   imageOD: 'fldjmQJSfPz95Ql3Z',
   imageOS: 'fld5vxKF3FdUa7F1f',
@@ -467,7 +470,8 @@ async function fetchPFForModel(recId) {
   
   const fields = [PF.name, PF.patternId, PF.so, PF.deviceLink, PF.pointCount, 
     PF.description, PF.category, PF.measMode, PF.eyeVariant, PF.uncertaintyNotes,
-    PF.coordsOD, PF.osMirror, PF.imageOD, PF.imageOS];
+    PF.coordsOD, PF.coordsOS, PF.coordsOdPolar, PF.coordsOsPolar,
+    PF.osMirror, PF.imageOD, PF.imageOS];
   
   let allPF = [];
   // Batch in groups of 20 to keep URL length manageable
@@ -1015,10 +1019,21 @@ async function renderPattern(pfId, modelId) {
   const imgOS = pf[PF.imageOS];
   const osMirror = pf[PF.osMirror];
   const coordsRaw = pf[PF.coordsOD];
+  const coordsPolarRaw = pf[PF.coordsOdPolar];
 
-  // Parse coordinates
+  // Parse coordinates — prefer polar if available (for radial patterns)
   let coords = [];
-  if (coordsRaw) {
+  let isPolar = false;
+  if (coordsPolarRaw) {
+    try {
+      const polar = JSON.parse(coordsPolarRaw);
+      if (Array.isArray(polar) && polar.length > 0 && 'r' in polar[0] && 'theta' in polar[0]) {
+        isPolar = true;
+        coords = polar;
+      }
+    } catch(e) {}
+  }
+  if (!isPolar && coordsRaw) {
     try { coords = JSON.parse(coordsRaw); } catch(e) {}
   }
 
@@ -1052,11 +1067,15 @@ async function renderPattern(pfId, modelId) {
           </div>
         ` : ''}
         ${coords.length ? `
-          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Point Coordinates (${coords.length} points)</h3>
+          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Point Coordinates (${coords.length} points${isPolar ? ', polar' : ''})</h3>
           <div class="coord-table">
             <table>
-              <tr><th>#</th><th>X</th><th>Y</th>${coords[0]?.count ? '<th>Count</th>' : ''}</tr>
-              ${coords.map((c,i) => `<tr><td>${i+1}</td><td>${c.x}</td><td>${c.y}</td>${c.count ? `<td>${c.count}</td>` : ''}</tr>`).join('')}
+              ${isPolar
+                ? `<tr><th>#</th><th>r (°)</th><th>θ (°)</th>${coords[0]?.count ? '<th>Count</th>' : ''}</tr>
+                   ${coords.map((c,i) => `<tr><td>${i+1}</td><td>${c.r}</td><td>${c.theta}</td>${c.count ? `<td>${c.count}</td>` : ''}</tr>`).join('')}`
+                : `<tr><th>#</th><th>X</th><th>Y</th>${coords[0]?.count ? '<th>Count</th>' : ''}</tr>
+                   ${coords.map((c,i) => `<tr><td>${i+1}</td><td>${c.x}</td><td>${c.y}</td>${c.count ? `<td>${c.count}</td>` : ''}</tr>`).join('')}`
+              }
             </table>
           </div>
         ` : ''}
