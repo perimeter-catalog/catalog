@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="700" viewBox="0 0 700 700">
+  <rect width="700" height="700" fill="white"/>
+  <g stroke="#888" stroke-width="0.5" fill="none">
+    <circle cx="350.0" cy="350.0" r="50.0"/>
+    <circle cx="350.0" cy="350.0" r="100.0"/>
+    <circle cx="350.0" cy="350.0" r="150.0"/>
+    <circle cx="350.0" cy="350.0" r="200.0"/>
+    <circle cx="350.0" cy="350.0" r="250.0"/>
+    <circle cx="350.0" cy="350.0" r="300.0"/>
+  </g>
+  <g stroke="#999" stroke-width="0.5" fill="none">
+    <line x1="350.0" y1="350.0" x2="645.4" y2="297.9"/>
+    <line x1="350.0" y1="350.0" x2="631.9" y2="247.4"/>
+    <line x1="350.0" y1="350.0" x2="609.8" y2="200.0"/>
+    <line x1="350.0" y1="350.0" x2="579.8" y2="157.2"/>
+    <line x1="350.0" y1="350.0" x2="542.8" y2="120.2"/>
+    <line x1="350.0" y1="350.0" x2="500.0" y2="90.2"/>
+    <line x1="350.0" y1="350.0" x2="452.6" y2="68.1"/>
+    <line x1="350.0" y1="350.0" x2="402.1" y2="54.6"/>
+    <line x1="350.0" y1="350.0" x2="297.9" y2="54.6"/>
+    <line x1="350.0" y1="350.0" x2="247.4" y2="68.1"/>
+    <line x1="350.0" y1="350.0" x2="200.0" y2="90.2"/>
+    <line x1="350.0" y1="350.0" x2="157.2" y2="120.2"/>
+    <line x1="350.0" y1="350.0" x2="120.2" y2="157.2"/>
+    <line x1="350.0" y1="350.0" x2="90.2" y2="200.0"/>
+    <line x1="350.0" y1="350.0" x2="68.1" y2="247.4"/>
+    <line x1="350.0" y1="350.0" x2="54.6" y2="297.9"/>
+    <line x1="350.0" y1="350.0" x2="54.6" y2="402.1"/>
+    <line x1="350.0" y1="350.0" x2="68.1" y2="452.6"/>
+    <line x1="350.0" y1="350.0" x2="90.2" y2="500.0"/>
+    <line x1="350.0" y1="350.0" x2="120.2" y2="542.8"/>
+    <line x1="350.0" y1="350.0" x2="157.2" y2="579.8"/>
+    <line x1="350.0" y1="350.0" x2="200.0" y2="609.8"/>
+    <line x1="350.0" y1="350.0" x2="247.4" y2="631.9"/>
+    <line x1="350.0" y1="350.0" x2="297.9" y2="645.4"/>
+    <line x1="350.0" y1="350.0" x2="402.1" y2="645.4"/>
+    <line x1="350.0" y1="350.0" x2="452.6" y2="631.9"/>
+    <line x1="350.0" y1="350.0" x2="500.0" y2="609.8"/>
+    <line x1="350.0" y1="350.0" x2="542.8" y2="579.8"/>
+    <line x1="350.0" y1="350.0" x2="579.8" y2="542.8"/>
+    <line x1="350.0" y1="350.0" x2="609.8" y2="500.0"/>
+    <line x1="350.0" y1="350.0" x2="631.9" y2="452.6"/>
+    <line x1="350.0" y1="350.0" x2="645.4" y2="402.1"/>
+  </g>
+  <line x1="50.0" y1="350.0" x2="650.0" y2="350.0" stroke="black" stroke-width="1.5"/>
+  <line x1="350.0" y1="50.0" x2="350.0" y2="650.0" stroke="black" stroke-width="1.5"/>
+  <text x="354.0" y="462.0" font-family="Arial" font-size="11" fill="#666">10°</text>
+  <text x="354.0" y="562.0" font-family="Arial" font-size="11" fill="#666">20°</text>
+  <text x="354.0" y="662.0" font-family="Arial" font-size="11" fill="#666">30°</text>
+  <circle cx="348.7" cy="380.0" r="4" fill="black"/>
+  <circle cx="372.7" cy="369.6" r="4" fill="black"/>
+  <circle cx="323.5" cy="372.9" r="4" fill="black"/>
+  <circle cx="376.8" cy="327.5" r="4" fill="black"/>
+  <circle cx="322.9" cy="327.9" r="4" fill="black"/>
+  <circle cx="303.0" cy="367.1" r="4" fill="black"/>
+  <circle cx="332.9" cy="397.0" r="4" fill="black"/>
+  <circle cx="367.1" cy="397.0" r="4" fill="black"/>
+  <circle cx="396.5" cy="368.5" r="4" fill="black"/>
+  <circle cx="397.0" cy="332.9" r="4" fill="black"/>
+  <circle cx="367.8" cy="303.3" r="4" fill="black"/>
+  <circle cx="332.2" cy="303.3" r="4" fill="black"/>
+  <circle cx="303.0" cy="332.9" r="4" fill="black"/>
+  <circle cx="251.5" cy="367.4" r="4" fill="black"/>
+  <circle cx="263.4" cy="400.0" r="4" fill="black"/>
+  <circle cx="298.8" cy="435.9" r="4" fill="black"/>
+  <circle cx="332.6" cy="448.5" r="4" fill="black"/>
+  <circle cx="365.9" cy="448.7" r="4" fill="black"/>
+  <circle cx="400.0" cy="436.6" r="4" fill="black"/>
+  <circle cx="420.7" cy="420.7" r="4" fill="black"/>
+  <circle cx="436.6" cy="400.0" r="4" fill="black"/>
+  <circle cx="447.9" cy="370.2" r="4" fill="black"/>
+  <circle cx="448.7" cy="334.1" r="4" fill="black"/>
+  <circle cx="436.6" cy="300.0" r="4" fill="black"/>
+  <circle cx="421.7" cy="280.3" r="4" fill="black"/>
+  <circle cx="400.0" cy="263.4" r="4" fill="black"/>
+  <circle cx="367.4" cy="251.5" r="4" fill="black"/>
+  <circle cx="350.0" cy="250.0" r="4" fill="black"/>
+  <circle cx="329.8" cy="252.1" r="4" fill="black"/>
+  <circle cx="300.0" cy="263.4" r="4" fill="black"/>
+  <circle cx="263.4" cy="300.0" r="4" fill="black"/>
+  <circle cx="251.5" cy="332.6" r="4" fill="black"/>
+  <circle cx="220.1" cy="425.0" r="4" fill="black"/>
+  <circle cx="242.4" cy="454.5" r="4" fill="black"/>
+  <circle cx="275.0" cy="479.9" r="4" fill="black"/>
+  <circle cx="324.0" cy="497.7" r="4" fill="black"/>
+  <circle cx="376.0" cy="497.7" r="4" fill="black"/>
+  <circle cx="425.0" cy="479.9" r="4" fill="black"/>
+  <circle cx="456.1" cy="456.1" r="4" fill="black"/>
+  <circle cx="479.9" cy="425.0" r="4" fill="black"/>
+  <circle cx="497.3" cy="378.2" r="4" fill="black"/>
+  <circle cx="497.7" cy="324.0" r="4" fill="black"/>
+  <circle cx="479.9" cy="275.0" r="4" fill="black"/>
+  <circle cx="456.1" cy="243.9" r="4" fill="black"/>
+  <circle cx="426.9" cy="221.2" r="4" fill="black"/>
+  <circle cx="376.0" cy="202.3" r="4" fill="black"/>
+  <circle cx="324.0" cy="202.3" r="4" fill="black"/>
+  <circle cx="275.0" cy="220.1" r="4" fill="black"/>
+  <circle cx="243.9" cy="243.9" r="4" fill="black"/>
+  <circle cx="221.2" cy="273.1" r="4" fill="black"/>
+  <circle cx="175.4" cy="447.5" r="4" fill="black"/>
+  <circle cx="247.5" cy="521.7" r="4" fill="black"/>
+  <circle cx="315.3" cy="547.0" r="4" fill="black"/>
+  <circle cx="381.9" cy="547.4" r="4" fill="black"/>
+  <circle cx="450.0" cy="523.2" r="4" fill="black"/>
+  <circle cx="523.2" cy="450.0" r="4" fill="black"/>
+  <circle cx="537.9" cy="418.4" r="4" fill="black"/>
+  <circle cx="546.4" cy="387.6" r="4" fill="black"/>
+  <circle cx="547.4" cy="318.1" r="4" fill="black"/>
+  <circle cx="538.9" cy="284.3" r="4" fill="black"/>
+  <circle cx="523.2" cy="250.0" r="4" fill="black"/>
+  <circle cx="450.0" cy="176.8" r="4" fill="black"/>
+  <circle cx="384.7" cy="153.0" r="4" fill="black"/>
+  <circle cx="315.3" cy="153.0" r="4" fill="black"/>
+  <circle cx="250.0" cy="176.8" r="4" fill="black"/>
+  <circle cx="178.3" cy="247.5" r="4" fill="black"/>
+  <circle cx="108.5" cy="414.7" r="4" fill="black"/>
+  <circle cx="170.7" cy="524.2" r="4" fill="black"/>
+  <circle cx="306.6" cy="596.2" r="4" fill="black"/>
+  <circle cx="350.0" cy="600.0" r="4" fill="black"/>
+  <circle cx="389.8" cy="596.8" r="4" fill="black"/>
+  <circle cx="526.8" cy="526.8" r="4" fill="black"/>
+  <circle cx="590.5" cy="418.2" r="4" fill="black"/>
+  <circle cx="598.7" cy="375.4" r="4" fill="black"/>
+  <circle cx="599.3" cy="331.8" r="4" fill="black"/>
+  <circle cx="591.5" cy="285.3" r="4" fill="black"/>
+  <circle cx="526.8" cy="173.2" r="4" fill="black"/>
+  <circle cx="393.4" cy="103.8" r="4" fill="black"/>
+  <circle cx="306.6" cy="103.8" r="4" fill="black"/>
+  <circle cx="173.2" cy="173.2" r="4" fill="black"/>
+  <circle cx="108.5" cy="285.3" r="4" fill="black"/>
+  <text x="350.0" y="32" font-family="Arial" font-size="17" font-weight="bold" text-anchor="middle">Humphrey Central 80-Point Screening</text>
+  <text x="350.0" y="685" font-family="Arial" font-size="10" fill="#666" text-anchor="middle">OD · 81 pts · 10° meridian grid (36 lines over 360°)</text>
+</svg>
