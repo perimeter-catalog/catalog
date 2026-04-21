@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <rect width="600" height="600" fill="white"/>
+  <g stroke="#999" stroke-width="0.5" fill="none">
+    <circle cx="300.0" cy="300.0" r="150.0"/>
+    <line x1="300.0" y1="300.0" x2="540.0" y2="300.0"/>
+    <line x1="300.0" y1="300.0" x2="507.8" y2="180.0"/>
+    <line x1="300.0" y1="300.0" x2="420.0" y2="92.2"/>
+    <line x1="300.0" y1="300.0" x2="300.0" y2="60.0"/>
+    <line x1="300.0" y1="300.0" x2="180.0" y2="92.2"/>
+    <line x1="300.0" y1="300.0" x2="92.2" y2="180.0"/>
+    <line x1="300.0" y1="300.0" x2="60.0" y2="300.0"/>
+    <line x1="300.0" y1="300.0" x2="92.2" y2="420.0"/>
+    <line x1="300.0" y1="300.0" x2="180.0" y2="507.8"/>
+    <line x1="300.0" y1="300.0" x2="300.0" y2="540.0"/>
+    <line x1="300.0" y1="300.0" x2="420.0" y2="507.8"/>
+    <line x1="300.0" y1="300.0" x2="507.8" y2="420.0"/>
+  </g>
+  <line x1="60.0" y1="300.0" x2="540.0" y2="300.0" stroke="black" stroke-width="1.2"/>
+  <line x1="300.0" y1="60.0" x2="300.0" y2="540.0" stroke="black" stroke-width="1.2"/>
+  <text x="303.0" y="460.0" font-family="Arial" font-size="10" fill="#666">5°</text>
+  <circle cx="210.0" cy="390.0" r="3" fill="black"/>
+  <circle cx="210.0" cy="390.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="210.0" cy="390.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="390.0" r="3" fill="black"/>
+  <circle cx="270.0" cy="390.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="390.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="390.0" r="3" fill="black"/>
+  <circle cx="330.0" cy="390.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="390.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="390.0" r="3" fill="black"/>
+  <circle cx="390.0" cy="390.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="390.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="210.0" cy="330.0" r="3" fill="black"/>
+  <circle cx="210.0" cy="330.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="210.0" cy="330.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="330.0" r="3" fill="black"/>
+  <circle cx="270.0" cy="330.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="330.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="330.0" r="3" fill="black"/>
+  <circle cx="330.0" cy="330.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="330.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="330.0" r="3" fill="black"/>
+  <circle cx="390.0" cy="330.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="330.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="210.0" cy="270.0" r="3" fill="black"/>
+  <circle cx="210.0" cy="270.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="210.0" cy="270.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="270.0" r="3" fill="black"/>
+  <circle cx="270.0" cy="270.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="270.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="270.0" r="3" fill="black"/>
+  <circle cx="330.0" cy="270.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="270.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="270.0" r="3" fill="black"/>
+  <circle cx="390.0" cy="270.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="270.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="210.0" cy="210.0" r="3" fill="black"/>
+  <circle cx="210.0" cy="210.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="210.0" cy="210.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="210.0" r="3" fill="black"/>
+  <circle cx="270.0" cy="210.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="270.0" cy="210.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="210.0" r="3" fill="black"/>
+  <circle cx="330.0" cy="210.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="330.0" cy="210.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="210.0" r="3" fill="black"/>
+  <circle cx="390.0" cy="210.0" r="7" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <circle cx="390.0" cy="210.0" r="11" stroke="black" stroke-width="1.2" fill="none" opacity="0.85"/>
+  <text x="300.0" y="30" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle">Humphrey Macula Threshold</text>
+  <text x="300.0" y="585" font-family="Arial" font-size="11" fill="#666" text-anchor="middle">OD · 16 points (each tested 3×)</text>
+</svg>
