@@ -1619,6 +1619,10 @@ function goHome() {
   // Close lightbox if open
   const lb = document.getElementById('lightbox');
   if (lb && lb.classList.contains('open')) closeLightbox(true);
+  // Reset any active Level 0 filter so "home" truly means the unfiltered root.
+  // sortMode is intentionally left alone (it's a user preference, less
+  // obtrusive than a filter that hides most of the catalog).
+  formFactorFilter = 'all';
   // If already at root, re-render (hashchange won't fire for same hash)
   if (!location.hash || location.hash === '#') {
     renderProducts();
