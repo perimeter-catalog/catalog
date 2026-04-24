@@ -1100,10 +1100,19 @@ async function renderModel(recId) {
   // [Pattern-strategy applicability], [Model 605 limitations vs. Models 610/620], etc.)
   // — matches fmtSections helper behavior used elsewhere. Also consumes a single trailing
   // blank line after the header (avoids excessive spacing under white-space: pre-wrap).
+  // Additionally, collapse blank lines WITHIN a section body (while preserving the blank
+  // line BEFORE a section header) so lists authored with paragraph-style spacing — e.g.
+  // HFA II-i series (720i/740i/745i/750i) which separates each Strategy entry with an
+  // empty line — render as tightly as records authored in the one-strategy-per-line style
+  // (e.g. HFA II Model 720). Section-boundary blank lines stay because they carry real
+  // structural meaning.
   let stratHtml = '';
   const strat = f[F.strategies];
   if (strat) {
     stratHtml = esc(strat)
+      // Collapse runs of 2+ newlines to a single newline, unless the next
+      // non-whitespace character is '[' (start of a section header).
+      .replace(/\n{2,}(?![ \t]*\[)/g, '\n')
       // Header followed by mandatory newline + optional blank line → header + single newline
       .replace(/\[([^\]\n]+)\]\n(\n[ \t]*)?/g, '<span class="section-label">[$1]</span>\n')
       // Catch remaining bare headers (end of text, no trailing newline)
