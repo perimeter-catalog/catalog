@@ -1152,12 +1152,16 @@ function renderPatternSVG(coords, opts) {
   for (let r = 10; r <= decadeMax; r += 10) rings.push(r);
   if (!rings.length) rings.push(5);
 
-  // Scale stroke/dot/text with extent so 24-2 and Full Field 120 look
-  // visually consistent regardless of tier. Compact thumbnails have a
-  // higher dot floor since the display is only ~120px wide.
-  const stroke = (EXTENT * 0.004).toFixed(3);
+  // Stroke widths: compact thumbnails (~120px display) need a stroke
+  // floor so concentric-circle rings don't vanish into sub-pixel range.
+  // At 120px display, 0.5px ≈ EXTENT/120 viewBox units.
+  const stroke = compact
+    ? Math.max(EXTENT * 0.004, EXTENT / 100).toFixed(3)
+    : (EXTENT * 0.004).toFixed(3);
+  // Point radius: uniform 2.2% of extent in compact (no floor → 10-2 and
+  // 24-2 render at the same visual size), 1.2% in full-size.
   const pointR = compact
-    ? Math.max(EXTENT * 0.025, 0.6).toFixed(2)
+    ? (EXTENT * 0.022).toFixed(2)
     : (EXTENT * 0.012).toFixed(2);
   const fontSize = (EXTENT * 0.05).toFixed(2);
 
@@ -1182,16 +1186,30 @@ function renderPatternSVG(coords, opts) {
     }
     // Concentric-circle notation for repeated-test points:
     //   count=1 → single filled dot
-    //   count=2 → filled dot + 1 outer ring   (⊙)
-    //   count=3 → filled dot + 2 outer rings  (⊚)
-    // The inner dot shrinks slightly for multi-count points so the ring
-    // reads as a distinct element rather than a bigger dot.
+    //   count=2 → small filled dot + 1 outer ring  (⊙)
+    //   count=3 → small filled dot + 2 outer rings (⊚)
+    // The inner dot shrinks and the outer rings scale up relative to
+    // pointR so the triple-ring structure reads as distinct rings, not
+    // a single thick blob.
     const count = Math.max(1, Number(p.count) || 1);
-    const inner = (Number(pointR) * (count === 1 ? 1 : 0.68)).toFixed(2);
-    const ringStroke = (Number(stroke) * 1.6).toFixed(3);
-    let svg = `<circle cx="${cx}" cy="${cy}" r="${inner}" fill="#1a2332"/>`;
+    if (count === 1) {
+      return `<circle cx="${cx}" cy="${cy}" r="${pointR}" fill="#1a2332"/>`;
+    }
+    const pr = Number(pointR);
+    const innerR = (pr * 0.55).toFixed(2);
+    // Ring stroke: scaled to pointR, with a compact-mode floor so rings
+    // remain visible at ~120px thumbnail display. ~0.8px at 120px.
+    const ringStroke = compact
+      ? Math.max(pr * 0.35, EXTENT / 75).toFixed(3)
+      : (pr * 0.28).toFixed(3);
+    // Ring positions: spread generously to give clear gaps between rings.
+    // Compact widens the spread further because strokes are proportionally
+    // thicker at thumbnail size.
+    const spreadBase = compact ? 1.3 : 1.05;
+    const spreadStep = compact ? 0.80 : 0.75;
+    let svg = `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="#1a2332"/>`;
     for (let i = 1; i < count; i++) {
-      const rOut = (Number(pointR) * (0.95 + (i - 1) * 0.55)).toFixed(2);
+      const rOut = (pr * (spreadBase + (i - 1) * spreadStep)).toFixed(2);
       svg += `<circle cx="${cx}" cy="${cy}" r="${rOut}" fill="none" stroke="#1a2332" stroke-width="${ringStroke}"/>`;
     }
     return svg;
