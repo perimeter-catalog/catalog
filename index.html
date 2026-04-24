@@ -223,6 +223,7 @@ a:hover { text-decoration: underline; }
   background: var(--bg3); color: var(--text2);
   letter-spacing: .05em; text-transform: uppercase;
 }
+.product-ff-tags { display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 
 /* ── Model List (Level 1) ── */
 .model-list { display: flex; flex-direction: column; gap: 8px; }
@@ -803,7 +804,6 @@ function setBreadcrumb(items) {
 // ── Level 0: Product List ──
 function productCardHtml(p) {
   const countries = collectCountries(p.records);
-  const types = [...new Set(p.records.map(r => sel(r.fields?.[F.type])).filter(Boolean))];
   const yearStr = p.year < 9999 ? p.year : '?';
 
   // Collect thumbs from records in group (records[0] is lowest SO → oldest first)
@@ -849,7 +849,9 @@ function productCardHtml(p) {
       <div class="product-thumbs">${thumbsHtml}</div>
       <div class="product-footer">
         <span class="product-count">${p.records.length} model${p.records.length>1?'s':''}</span>
-        ${types[0] ? `<span class="product-type-tag">${esc(types[0])}</span>` : ''}
+        ${p.formFactors.length
+          ? `<span class="product-ff-tags">${p.formFactors.map(ff => `<span class="product-type-tag">${esc(ff)}</span>`).join('')}</span>`
+          : ''}
       </div>
     </div>
   `;
