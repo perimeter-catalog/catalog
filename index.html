@@ -1177,8 +1177,12 @@ function renderPatternSVG(coords, opts) {
   const pointsSvg = pts.map(p => {
     const cx = p.x, cy = -p.y; // flip y for SVG
     if (p.type === 'blind_spot') {
-      const rx = (EXTENT * 0.03).toFixed(2), ry = (EXTENT * 0.045).toFixed(2);
-      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff" stroke="#8694a7" stroke-width="${stroke}"/>`;
+      // Black filled triangle (pointing up) — conventional perimeter
+      // chart notation for the physiologic blind spot.
+      const s = EXTENT * 0.035;
+      const topY = cy - s * 1.15;
+      const botY = cy + s * 0.58;
+      return `<polygon points="${cx},${topY} ${cx - s},${botY} ${cx + s},${botY}" fill="#1a2332"/>`;
     }
     if (p.type === 'fixation') {
       const m = (EXTENT * 0.02).toFixed(2);
