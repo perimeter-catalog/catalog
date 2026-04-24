@@ -278,6 +278,11 @@ a:hover { text-decoration: underline; }
   margin-top: 8px; margin-left: auto; margin-right: auto;
   object-fit: contain; display: block;
 }
+.pattern-card .pattern-thumb-svg {
+  width: 120px; height: 120px; margin: 8px auto 0;
+  border-radius: 4px; background: #fff; border: 1px solid var(--border);
+}
+.pattern-card .pattern-thumb-svg svg { width: 100%; height: 100%; display: block; }
 
 /* ── Pattern Detail (Level 3) ── */
 .pattern-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -1050,16 +1055,6 @@ async function renderModel(recId) {
   const pfRecords = await pfPromise;
   const pfGrid = document.getElementById('pfGrid');
   if (pfGrid && pfRecords.length) {
-    // Slug helper (mirrors the Pattern Detail fallback logic). Used to build
-    // /pattern_images/{slug}_od.png fallback URL when the Airtable attachment
-    // is empty.
-    const toPfSlug = pid => String(pid || '')
-      .toLowerCase()
-      .replace(/\//g, '-')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9\-]/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
     // Extract a SHORT leading count from the free-form "Point Count / Structure"
     // field (e.g., "54 test pts + 1 blind spot marker. Structure: 6° grid…"
     // → "54"). Keeps the card layout compact even for patterns with long
@@ -1074,17 +1069,38 @@ async function renderModel(recId) {
       const name = pf_[PF.name] || '';
       const cat = sel(pf_[PF.category]);
       const ptsShort = shortCount(pf_[PF.pointCount]);
+      // Thumbnail priority: coords JSON → SVG; else Airtable attachment → <img>;
+      // else nothing (the card still shows name/category/count).
+      const coordsRaw = pf_[PF.coordsOD];
+      const polarRaw = pf_[PF.coordsOdPolar];
+      let thumbCoords = [];
+      let thumbPolar = false;
+      if (polarRaw) {
+        try {
+          const p = JSON.parse(polarRaw);
+          if (Array.isArray(p) && p.length > 0 && 'r' in p[0] && 'theta' in p[0]) {
+            thumbPolar = true;
+            thumbCoords = p;
+          }
+        } catch(e) {}
+      }
+      if (!thumbPolar && coordsRaw) {
+        try { thumbCoords = JSON.parse(coordsRaw); } catch(e) {}
+      }
       const imgOD = pf_[PF.imageOD];
       const attachSrc = imgOD && imgOD.length ? (imgOD[0].thumbnails?.large?.url || imgOD[0].url) : '';
-      const slug = toPfSlug(pf_[PF.patternId]);
-      const fallbackSrc = slug ? `pattern_images/${slug}_od.png` : '';
-      const imgSrc = attachSrc || fallbackSrc;
+      let thumbHtml = '';
+      if (thumbCoords.length) {
+        thumbHtml = `<div class="pattern-thumb-svg">${renderPatternSVG(thumbCoords, { isPolar: thumbPolar, mirror: false, compact: true })}</div>`;
+      } else if (attachSrc) {
+        thumbHtml = `<img src="${attachSrc}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none'">`;
+      }
       pgHtml += `
         <div class="pattern-card" onclick="location.hash='#pattern/${pf.id}/${recId}'">
           <div class="pname">${esc(name)}</div>
           <div class="pcat">${esc(cat)}</div>
           ${ptsShort ? `<div class="pcount">${ptsShort} points</div>` : ''}
-          ${imgSrc ? `<img src="${imgSrc}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none'">` : ''}
+          ${thumbHtml}
         </div>
       `;
     });
@@ -1098,12 +1114,14 @@ async function renderModel(recId) {
 // ── SVG pattern renderer (from Airtable coord JSON) ──
 // Renders eccentricity rings + axes + test points as inline SVG.
 // Accepts cartesian [{x,y,type?,count?}] or polar [{r,theta,type?,count?}].
+// Auto-fits the viewport extent based on the actual point spread so that
+// a central pattern like 24-2 doesn't appear tiny inside a full-field frame.
 // If mirror=true, x is negated (for OS when osMirror checkbox is set and OS
 // coords are taken from OD).
+// If compact=true, axis labels are dropped and styling thinned — used for
+// small thumbnails on the device page.
 function renderPatternSVG(coords, opts) {
-  const { isPolar = false, mirror = false, label = '' } = opts || {};
-  const EXTENT = 70;             // ±70° visible
-  const rings = [10, 20, 30, 40, 50, 60];
+  const { isPolar = false, mirror = false, label = '', compact = false } = opts || {};
   // Convert coords to (x,y) in visual-field convention (y up = positive)
   const pts = (coords || []).map(c => {
     let x, y;
@@ -1118,28 +1136,50 @@ function renderPatternSVG(coords, opts) {
     if (mirror) x = -x;
     return { x, y, type: c.type, count: c.count };
   }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
-  // SVG coord system: y-axis flipped (we negate y at render time below)
+
+  // Auto-fit extent: pick the tightest ring tier that covers all points,
+  // with small padding so outer points don't sit exactly on the boundary.
+  const maxR = pts.length ? Math.max(...pts.map(p => Math.hypot(p.x, p.y))) : 60;
+  let EXTENT, rings;
+  if (maxR <= 11)      { EXTENT = 15; rings = [5, 10, 15]; }
+  else if (maxR <= 22) { EXTENT = 25; rings = [10, 20]; }
+  else if (maxR <= 28) { EXTENT = 30; rings = [10, 20, 30]; }
+  else if (maxR <= 46) { EXTENT = 50; rings = [10, 20, 30, 40, 50]; }
+  else if (maxR <= 62) { EXTENT = 65; rings = [10, 20, 30, 40, 50, 60]; }
+  else                 { EXTENT = 80; rings = [10, 20, 30, 40, 50, 60, 70, 80]; }
+
+  // Scale stroke/dot/text with extent so 24-2 and Full Field 120 look
+  // visually consistent regardless of tier.
+  const stroke = (EXTENT * 0.004).toFixed(3);
+  const pointR = Math.max(0.4, EXTENT * 0.018).toFixed(2);
+  const fontSize = (EXTENT * 0.05).toFixed(2);
+
   const ringsSvg = rings.map(r =>
-    `<circle cx="0" cy="0" r="${r}" fill="none" stroke="#c8d0dc" stroke-width="0.25"/>`
+    `<circle cx="0" cy="0" r="${r}" fill="none" stroke="#c8d0dc" stroke-width="${stroke}"/>`
   ).join('');
   const axesSvg =
-    `<line x1="${-EXTENT}" y1="0" x2="${EXTENT}" y2="0" stroke="#c8d0dc" stroke-width="0.25"/>` +
-    `<line x1="0" y1="${-EXTENT}" x2="0" y2="${EXTENT}" stroke="#c8d0dc" stroke-width="0.25"/>`;
-  const labelsSvg = rings.map(r =>
-    `<text x="${r + 1.2}" y="-1" font-size="3" fill="#8694a7" font-family="DM Sans,sans-serif">${r}°</text>`
+    `<line x1="${-EXTENT}" y1="0" x2="${EXTENT}" y2="0" stroke="#c8d0dc" stroke-width="${stroke}"/>` +
+    `<line x1="0" y1="${-EXTENT}" x2="0" y2="${EXTENT}" stroke="#c8d0dc" stroke-width="${stroke}"/>`;
+  const labelsSvg = compact ? '' : rings.map(r =>
+    `<text x="${r + EXTENT * 0.015}" y="${-EXTENT * 0.01}" font-size="${fontSize}" fill="#8694a7" font-family="DM Sans,sans-serif">${r}°</text>`
   ).join('');
   const pointsSvg = pts.map(p => {
     const cx = p.x, cy = -p.y; // flip y for SVG
     if (p.type === 'blind_spot') {
-      return `<ellipse cx="${cx}" cy="${cy}" rx="2.2" ry="3.2" fill="#fff" stroke="#8694a7" stroke-width="0.4"/>`;
+      const rx = (EXTENT * 0.03).toFixed(2), ry = (EXTENT * 0.045).toFixed(2);
+      return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#fff" stroke="#8694a7" stroke-width="${stroke}"/>`;
     }
     if (p.type === 'fixation') {
-      return `<path d="M${cx-1.5},${cy} L${cx+1.5},${cy} M${cx},${cy-1.5} L${cx},${cy+1.5}" stroke="#c43c3c" stroke-width="0.4"/>`;
+      const m = (EXTENT * 0.02).toFixed(2);
+      return `<path d="M${cx - m},${cy} L${cx + +m},${cy} M${cx},${cy - m} L${cx},${cy + +m}" stroke="#c43c3c" stroke-width="${stroke}"/>`;
     }
-    return `<circle cx="${cx}" cy="${cy}" r="1.1" fill="#1a2332"/>`;
+    return `<circle cx="${cx}" cy="${cy}" r="${pointR}" fill="#1a2332"/>`;
   }).join('');
   const title = label ? `<title>${label}</title>` : '';
-  return `<svg viewBox="${-EXTENT} ${-EXTENT} ${EXTENT * 2} ${EXTENT * 2}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;max-height:400px;border-radius:var(--radius);border:1px solid var(--border);background:#fff">${title}${ringsSvg}${axesSvg}${labelsSvg}${pointsSvg}</svg>`;
+  const style = compact
+    ? 'width:100%;height:100%;display:block'
+    : 'width:100%;max-width:400px;max-height:400px;border-radius:var(--radius);border:1px solid var(--border);background:#fff';
+  return `<svg viewBox="${-EXTENT} ${-EXTENT} ${EXTENT * 2} ${EXTENT * 2}" xmlns="http://www.w3.org/2000/svg" style="${style}">${title}${ringsSvg}${axesSvg}${labelsSvg}${pointsSvg}</svg>`;
 }
 
 // ── Level 3: Pattern Detail ──
