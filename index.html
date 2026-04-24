@@ -1117,6 +1117,32 @@ async function renderPattern(pfId, modelId) {
     try { coords = JSON.parse(coordsRaw); } catch(e) {}
   }
 
+  // ── Pattern image fallback via /pattern_images/ directory ──
+  // The Coord-HFA workflow commits Pattern Image files (PNG+SVG) to
+  // /pattern_images/{slug}_{eye}.png instead of uploading to Airtable
+  // attachment. Catalog falls back to this path when PF.imageOD/OS
+  // attachments are empty. Slug = lower-kebab of Pattern ID:
+  //   "24-2"          → "24-2"
+  //   "30/60-1"       → "30-60-1"
+  //   "Nasal Step"    → "nasal-step"
+  // Patterns whose filenames don't match this slug convention
+  // (e.g., "Central 30-1" → file is "30-1_od.png") will 404 silently
+  // and fall back to "No image available" via onerror.
+  const pfSlug = String(pf[PF.patternId] || '')
+    .toLowerCase()
+    .replace(/\//g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  const fallbackOdUrl = pfSlug ? `pattern_images/${pfSlug}_od.png` : '';
+  const fallbackOsUrl = pfSlug ? `pattern_images/${pfSlug}_os.png` : '';
+  const odSrc = (imgOD && imgOD.length) ? imgOD[0].url : fallbackOdUrl;
+  const osSrc = (imgOS && imgOS.length) ? imgOS[0].url : fallbackOsUrl;
+  // Show OS section if we have an attachment, or if the pattern is marked
+  // OS=mirror (meaning OS geometry is meaningful) and we can attempt a fallback.
+  const showOsSection = (imgOS && imgOS.length) || (osMirror && fallbackOsUrl);
+
   // ── Strategies available for this pattern on the context device ──
   // Parse the parent device's strict-format Test Patterns + Abbreviations and
   // surface the union of strategies keyed by the PF's Pattern ID.
@@ -1155,14 +1181,18 @@ async function renderPattern(pfId, modelId) {
       <div>
         <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">OD Pattern</h3>
         <div class="pattern-image-wrap">
-          ${imgOD && imgOD.length ? `<img src="${imgOD[0].url}" alt="OD" onclick="openLightbox('${imgOD[0].url}')" style="cursor:pointer">` : '<p style="color:var(--text3);font-size:13px">No image available</p>'}
+          ${odSrc
+            ? `<img src="${odSrc}" alt="OD" onclick="openLightbox('${odSrc}')" style="cursor:pointer" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+               <p style="display:none;color:var(--text3);font-size:13px">No image available</p>`
+            : '<p style="color:var(--text3);font-size:13px">No image available</p>'}
         </div>
       </div>
       <div>
-        ${imgOS && imgOS.length ? `
+        ${showOsSection ? `
           <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">OS Pattern</h3>
           <div class="pattern-image-wrap">
-            <img src="${imgOS[0].url}" alt="OS" onclick="openLightbox('${imgOS[0].url}')" style="cursor:pointer">
+            <img src="${osSrc}" alt="OS" onclick="openLightbox('${osSrc}')" style="cursor:pointer" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <p style="display:none;color:var(--text3);font-size:13px">No image available</p>
           </div>
         ` : ''}
         ${coords.length ? (() => {
