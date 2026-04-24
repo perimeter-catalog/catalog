@@ -876,11 +876,15 @@ async function renderModel(recId) {
   // Strategies formatted
   // Highlight ANY bracketed section header ([Abbreviations], [Strategy specifications — per 1985 Manual],
   // [Pattern-strategy applicability], [Model 605 limitations vs. Models 610/620], etc.)
-  // — matches fmtSections helper behavior used elsewhere.
+  // — matches fmtSections helper behavior used elsewhere. Also consumes a single trailing
+  // blank line after the header (avoids excessive spacing under white-space: pre-wrap).
   let stratHtml = '';
   const strat = f[F.strategies];
   if (strat) {
     stratHtml = esc(strat)
+      // Header followed by mandatory newline + optional blank line → header + single newline
+      .replace(/\[([^\]\n]+)\]\n(\n[ \t]*)?/g, '<span class="section-label">[$1]</span>\n')
+      // Catch remaining bare headers (end of text, no trailing newline)
       .replace(/\[([^\]\n]+)\]/g, '<span class="section-label">[$1]</span>');
   }
 
@@ -1198,20 +1202,25 @@ async function renderPattern(pfId, modelId) {
         const first = String(s || '').split('\n')[0].trim();
         return first.length > 42 ? first.slice(0, 40).replace(/[\s,;:·\-]+$/, '') + '…' : first;
       };
-      // Enrich from allRecords for richer display + sorting; preserve unknown entries.
+      // Enrich from allRecords for richer display + sorting.
+      // NOTE: with returnFieldsByFieldId=true, linked-record fields return as arrays of
+      // record-ID STRINGS, not {id,name} objects. Normalize both forms defensively
+      // (same pattern used by fetchPFForModel at line ~497).
       const entries = devLinks.map(dl => {
-        const full = allRecords.find(r => r.id === dl.id);
+        const did = typeof dl === 'string' ? dl : dl?.id;
+        const dname = typeof dl === 'string' ? '' : (dl?.name || '');
+        const full = allRecords.find(r => r.id === did);
         const f = full?.fields || {};
-        const modelRaw = f[F.model] || dl.name || '';
+        const modelRaw = f[F.model] || dname || '';
         return {
-          id: dl.id,
+          id: did,
           model: String(modelRaw).replace(/\r?\n/g, ' ').trim(),
           mfr: shortMfr(f[F.manufacturer]),
           year: shortYear(f[F.releaseYear]),
           yearSort: (s => { const m = String(s || '').match(/\d{4}/); return m ? parseInt(m[0], 10) : 9999; })(f[F.releaseYear]),
-          isCurrent: dl.id === modelId,
+          isCurrent: did === modelId,
         };
-      });
+      }).filter(e => e.id);  // drop any malformed link entries
       // Sort: manufacturer asc → release year asc → model asc
       entries.sort((a, b) =>
         a.mfr.localeCompare(b.mfr) ||
