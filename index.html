@@ -102,6 +102,43 @@ a:hover { text-decoration: underline; }
 .ff-filter.active { background-color: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .sort-bar-divider { width: 1px; align-self: stretch; background: var(--border); margin: 2px 4px; }
 
+/* ── Custom dropdown (used for Country filter so flag <img> works everywhere,
+     including Windows where Unicode regional indicators don't render as flags) ── */
+.cd { position: relative; display: inline-block; }
+.cd-button {
+  display: inline-flex; align-items: center; gap: 6px;
+  /* Reuses .ff-filter for pill shape + chevron + active-state colours. */
+}
+.cd-button > span { white-space: nowrap; }
+.cd-flag {
+  width: 16px; height: auto; border-radius: 1px;
+  display: inline-block; flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08);
+}
+.cd-flag-placeholder {
+  width: 16px; height: 11px;
+  display: inline-block; flex-shrink: 0;
+}
+.cd-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+  min-width: 100%; max-height: 340px; overflow-y: auto;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px -6px rgba(0,0,0,.22);
+  padding: 4px;
+}
+.cd-menu[hidden] { display: none; }
+.cd-option {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 6px 10px; border: 0; background: transparent; cursor: pointer;
+  font-family: var(--mono); font-size: 12px; color: var(--text2);
+  text-align: left; border-radius: 4px;
+  white-space: nowrap;
+}
+.cd-option:hover { background: var(--accent-soft); color: var(--accent); }
+.cd-option.selected { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.cd-option:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
 /* ── Product Cards (Level 0) ── */
 .product-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -700,16 +737,6 @@ function collectCountries(records) {
   }
   return out;
 }
-// Convert a 2-letter ISO country code (e.g. 'se', 'jp', 'gb') into the
-// corresponding Unicode flag emoji via regional indicator symbols. Used to
-// prefix country names in dropdown labels where <option> can't hold <img>.
-// Returns '' for anything that isn't a clean 2-letter code.
-function codeToFlag(code) {
-  if (!code || code.length !== 2 || !/^[a-z]{2}$/i.test(code)) return '';
-  const A = 'A'.charCodeAt(0);
-  const BASE = 0x1F1E6;  // REGIONAL INDICATOR SYMBOL LETTER A
-  return String.fromCodePoint(...[...code.toUpperCase()].map(c => BASE + c.charCodeAt(0) - A));
-}
 function extractYear(s) {
   if (!s) return 9999;
   const m = String(s).match(/(\d{4})/);
@@ -896,20 +923,19 @@ function renderProducts() {
     })
     .catch(() => {});
 
-  // Country name → 2-letter ISO code from the first record that has a flag
-  // attachment with a matching filename (e.g. 'se.png' → 'se'). Used to
-  // prefix country dropdown labels with a flag emoji — <option> can't hold
-  // <img>, so we fall back to the Unicode regional indicator. Countries with
-  // no flag attachment anywhere (e.g. Singapore) simply render without an
-  // emoji prefix.
-  const countryCodes = {};
+  // Country name → flag attachment URL, from the first record per country that
+  // has a flag attachment. The Country dropdown uses a custom component (not
+  // a native <select>) so it can render the real PNG via <img> — this is
+  // necessary because Windows fonts do not render Unicode regional indicator
+  // pairs as flag glyphs.
+  const countryFlagUrls = {};
   for (const r of allRecords) {
     const name = countryName(r);
-    if (!name || countryCodes[name]) continue;
+    if (!name || countryFlagUrls[name]) continue;
     const flagArr = r.fields?.[F.flag];
-    if (!flagArr || !flagArr.length || !flagArr[0].filename) continue;
-    const code = flagArr[0].filename.split('.')[0].toLowerCase();
-    if (/^[a-z]{2}$/.test(code)) countryCodes[name] = code;
+    if (!flagArr || !flagArr.length) continue;
+    const url = flagArr[0].thumbnails?.small?.url || flagArr[0].url;
+    if (url) countryFlagUrls[name] = url;
   }
 
   const ffOptionsHtml = [`<option value="all">All form factors (${afterCountryOnly.length})</option>`]
@@ -918,14 +944,28 @@ function renderProducts() {
       .map(ff => `<option value="${esc(ff)}"${ff===formFactorFilter?' selected':''}>${esc(ff)} (${ffCounts[ff]})</option>`))
     .join('');
 
-  const countryOptionsHtml = [`<option value="all">All countries (${afterFFOnly.length})</option>`]
-    .concat(countryOptions
-      .map(c => {
-        const emoji = codeToFlag(countryCodes[c]);
-        const label = emoji ? `${emoji} ${c}` : c;
-        return `<option value="${esc(c)}"${c===countryFilter?' selected':''}>${esc(label)} (${countryCounts[c]})</option>`;
-      }))
-    .join('');
+  // Country dropdown: custom (not native <select>) so flag PNGs render.
+  const countryOption = (val, label, count, isSelected) => {
+    const url = countryFlagUrls[val];
+    const flagHtml = url
+      ? `<img class="cd-flag" src="${url}" alt="" loading="lazy">`
+      : '<span class="cd-flag-placeholder"></span>';
+    return `<button type="button" role="option" aria-selected="${isSelected}" class="cd-option${isSelected?' selected':''}" data-value="${esc(val)}" onclick="selectCountry(this.dataset.value)">${flagHtml}<span>${esc(label)} (${count})</span></button>`;
+  };
+
+  const countryMenuHtml = [
+    // 'all' option — no flag, placeholder keeps text aligned
+    `<button type="button" role="option" aria-selected="${countryFilter==='all'}" class="cd-option${countryFilter==='all'?' selected':''}" data-value="all" onclick="selectCountry('all')"><span class="cd-flag-placeholder"></span><span>All countries (${afterFFOnly.length})</span></button>`,
+    ...countryOptions.map(c => countryOption(c, c, countryCounts[c], c === countryFilter)),
+  ].join('');
+
+  // Button label: selected country with its flag, or 'All countries (N)'.
+  const countryButtonFlagHtml = (countryFilter !== 'all' && countryFlagUrls[countryFilter])
+    ? `<img class="cd-flag" src="${countryFlagUrls[countryFilter]}" alt="">`
+    : '';
+  const countryButtonLabel = countryFilter === 'all'
+    ? `All countries (${afterFFOnly.length})`
+    : `${countryFilter} (${countryCounts[countryFilter] || 0})`;
 
   const ffActive = formFactorFilter !== 'all';
   const countryActive = countryFilter !== 'all';
@@ -944,9 +984,14 @@ function renderProducts() {
       </div>
       <div class="ff-filter-group">
         <label>COUNTRY</label>
-        <select class="ff-filter ${countryActive?'active':''}" onchange="countryFilter=this.value;renderProducts()">
-          ${countryOptionsHtml}
-        </select>
+        <div class="cd" id="countryDropdown">
+          <button type="button" class="ff-filter cd-button ${countryActive?'active':''}" onclick="toggleCountryDropdown(event)" aria-haspopup="listbox" aria-expanded="false">
+            ${countryButtonFlagHtml}<span>${esc(countryButtonLabel)}</span>
+          </button>
+          <div class="cd-menu" role="listbox" aria-label="Filter by country" hidden>
+            ${countryMenuHtml}
+          </div>
+        </div>
       </div>
       <div class="sort-bar-divider"></div>
       <label>SORT BY</label>
@@ -1693,6 +1738,48 @@ function toggleSection(el) {
 // ═══════════════════════════════════════════════════════════════
 // NAVIGATION / ROUTER
 // ═══════════════════════════════════════════════════════════════
+
+// Custom Country dropdown — open/close + outside-click / Escape close.
+// Attached inline via onclick so it survives innerHTML replacement each
+// time renderProducts() rebuilds the DOM.
+function toggleCountryDropdown(ev) {
+  ev?.stopPropagation();
+  const dd = document.getElementById('countryDropdown');
+  if (!dd) return;
+  const menu = dd.querySelector('.cd-menu');
+  const btn = dd.querySelector('.cd-button');
+  if (!menu || !btn) return;
+  const willOpen = !!menu.hidden;
+  menu.hidden = !willOpen;
+  btn.setAttribute('aria-expanded', String(willOpen));
+  if (willOpen) {
+    // Close on any click outside the dropdown, or on Escape.
+    const closer = (e) => {
+      if (!dd.contains(e.target)) {
+        menu.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('click', closer);
+        document.removeEventListener('keydown', esc);
+      }
+    };
+    const esc = (e) => {
+      if (e.key === 'Escape') {
+        menu.hidden = true;
+        btn.setAttribute('aria-expanded', 'false');
+        btn.focus();
+        document.removeEventListener('click', closer);
+        document.removeEventListener('keydown', esc);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closer), 0);
+    document.addEventListener('keydown', esc);
+  }
+}
+function selectCountry(val) {
+  countryFilter = val;
+  renderProducts();
+}
+
 function goHome() {
   // Close lightbox if open
   const lb = document.getElementById('lightbox');
