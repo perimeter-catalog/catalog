@@ -1323,24 +1323,51 @@ async function renderPattern(pfId, modelId) {
   if (!osIsPolar && coordsOsRaw) {
     try { coordsOs = JSON.parse(coordsOsRaw); } catch(e) {}
   }
-  // OS rendering source: explicit coordsOS wins; else mirror-from-OD if osMirror;
-  // else attachment; else hide section.
-  const osRenderCoords = coordsOs.length ? coordsOs : (osMirror && coords.length ? coords : []);
-  const osRenderPolar = coordsOs.length ? osIsPolar : isPolar;
-  const osRenderMirror = !coordsOs.length && osMirror; // mirror-from-OD flag
 
-  // ── Left-right symmetric patterns collapse into a single panel ──
-  // When the OD point set is symmetric about the y-axis, mirroring it
-  // produces an identical figure. Rendering two identical panels is
-  // redundant and confusing (e.g. Macula, 10-2, 24-2, 30-2). In that
-  // case we render only one panel labeled "OD / OS" and skip the OS
-  // section entirely. We only collapse when OS is mirror-derived — if
-  // the user explicitly provided coordsOS we respect that and render
-  // both panels (they chose to supply separate data).
-  const odOsIdentical = osRenderMirror && coords.length &&
-    isLeftRightSymmetric(coords, isPolar);
-  const showOsSection = !odOsIdentical && (osRenderCoords.length || (imgOS && imgOS.length));
-  const odHeading = odOsIdentical ? 'OD / OS (left-right symmetric)' : 'OD Pattern';
+  // ── Binocular (OU) detection ──
+  // Estermann Binocular and similar tests are measured with both eyes open,
+  // so the OD/OS distinction does not apply. We detect this from the PF's
+  // Measurement Mode or Eye Variant fields. When binocular, render a single
+  // panel labeled "Binocular (OU)" regardless of osMirror / coordsOS state.
+  const measModeVal = sel(pf[PF.measMode]);
+  const eyeVariantVal = sel(pf[PF.eyeVariant]);
+  const isBinocular =
+    measModeVal === 'Binocular' ||
+    eyeVariantVal === 'Binocular' ||
+    eyeVariantVal === 'Binocular/Binocular';
+
+  // ── OS panel decision ──
+  // We render a separate OS panel only when the user has supplied explicit
+  // OS coordinates (coordsOsRaw / coordsOsPolarRaw) OR an explicit OS image
+  // attachment. For binocular tests, for osMirror=true cases (symmetric OR
+  // asymmetric), and for patterns without any OS data, we render only the
+  // OD panel and adjust the heading label.
+  const hasExplicitOsData = coordsOs.length > 0 || (imgOS && imgOS.length);
+  const showOsSection = !isBinocular && hasExplicitOsData;
+
+  // OS rendering source (when showOsSection is true)
+  const osRenderCoords = coordsOs;
+  const osRenderPolar = osIsPolar;
+  const osRenderMirror = false; // explicit OS coords are never re-mirrored
+
+  // ── OD heading label ──
+  // Four cases:
+  //   1. Binocular → "Binocular (OU)"
+  //   2. Symmetric pattern with osMirror=true → "OD / OS (left-right symmetric)"
+  //   3. Asymmetric pattern with osMirror=true → "OD (OS is mirror image)"
+  //   4. Explicit OS data OR no OS info → "OD Pattern"
+  let odHeading;
+  if (isBinocular) {
+    odHeading = 'Binocular (OU)';
+  } else if (hasExplicitOsData) {
+    odHeading = 'OD Pattern';
+  } else if (osMirror && coords.length) {
+    odHeading = isLeftRightSymmetric(coords, isPolar)
+      ? 'OD / OS (left-right symmetric)'
+      : 'OD (OS is mirror image)';
+  } else {
+    odHeading = 'OD Pattern';
+  }
 
   // ── Strategies available for this pattern on the context device ──
   // Parse the parent device's strict-format Test Patterns + Abbreviations and
