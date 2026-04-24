@@ -700,6 +700,16 @@ function collectCountries(records) {
   }
   return out;
 }
+// Convert a 2-letter ISO country code (e.g. 'se', 'jp', 'gb') into the
+// corresponding Unicode flag emoji via regional indicator symbols. Used to
+// prefix country names in dropdown labels where <option> can't hold <img>.
+// Returns '' for anything that isn't a clean 2-letter code.
+function codeToFlag(code) {
+  if (!code || code.length !== 2 || !/^[a-z]{2}$/i.test(code)) return '';
+  const A = 'A'.charCodeAt(0);
+  const BASE = 0x1F1E6;  // REGIONAL INDICATOR SYMBOL LETTER A
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => BASE + c.charCodeAt(0) - A));
+}
 function extractYear(s) {
   if (!s) return 9999;
   const m = String(s).match(/(\d{4})/);
@@ -886,6 +896,22 @@ function renderProducts() {
     })
     .catch(() => {});
 
+  // Country name → 2-letter ISO code from the first record that has a flag
+  // attachment with a matching filename (e.g. 'se.png' → 'se'). Used to
+  // prefix country dropdown labels with a flag emoji — <option> can't hold
+  // <img>, so we fall back to the Unicode regional indicator. Countries with
+  // no flag attachment anywhere (e.g. Singapore) simply render without an
+  // emoji prefix.
+  const countryCodes = {};
+  for (const r of allRecords) {
+    const name = countryName(r);
+    if (!name || countryCodes[name]) continue;
+    const flagArr = r.fields?.[F.flag];
+    if (!flagArr || !flagArr.length || !flagArr[0].filename) continue;
+    const code = flagArr[0].filename.split('.')[0].toLowerCase();
+    if (/^[a-z]{2}$/.test(code)) countryCodes[name] = code;
+  }
+
   const ffOptionsHtml = [`<option value="all">All form factors (${afterCountryOnly.length})</option>`]
     .concat(FORM_FACTOR_ORDER
       .filter(ff => ffCounts[ff] > 0)
@@ -894,7 +920,11 @@ function renderProducts() {
 
   const countryOptionsHtml = [`<option value="all">All countries (${afterFFOnly.length})</option>`]
     .concat(countryOptions
-      .map(c => `<option value="${esc(c)}"${c===countryFilter?' selected':''}>${esc(c)} (${countryCounts[c]})</option>`))
+      .map(c => {
+        const emoji = codeToFlag(countryCodes[c]);
+        const label = emoji ? `${emoji} ${c}` : c;
+        return `<option value="${esc(c)}"${c===countryFilter?' selected':''}>${esc(label)} (${countryCounts[c]})</option>`;
+      }))
     .join('');
 
   const ffActive = formFactorFilter !== 'all';
