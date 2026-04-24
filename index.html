@@ -280,6 +280,35 @@ a:hover { text-decoration: underline; }
 .coord-table th, .coord-table td { padding: 3px 8px; border-bottom: 1px solid var(--border); text-align: right; }
 .coord-table th { color: var(--text3); position: sticky; top: 0; background: var(--bg2); }
 
+/* ── Strategies Available (on Pattern Detail) ── */
+.strategies-available { margin: 24px 0 16px; padding: 14px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
+.strategies-available h3 { font-size: 12px; color: var(--text3); font-family: var(--mono); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 10px; font-weight: 500; }
+.strategies-available h3 .sa-device { color: var(--text2); text-transform: none; letter-spacing: 0; font-family: var(--font); font-weight: 500; }
+.strategy-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.strategy-chip {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 4px 10px; border: 1px solid var(--border2); border-radius: 14px;
+  background: var(--bg); font-size: 12px; color: var(--text2);
+}
+.strategy-chip code { font-family: var(--mono); font-size: 11px; color: var(--accent); font-weight: 500; background: var(--accent-soft); padding: 1px 6px; border-radius: 3px; }
+.strategies-available .sa-empty { font-size: 12px; color: var(--text3); font-style: italic; }
+
+/* ── Also Available On (linked devices for a Pattern Figure) ── */
+.pf-devices { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
+.pf-device-link {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 12px; line-height: 1.4; color: var(--text); text-decoration: none;
+  transition: border-color .12s, background .12s;
+}
+.pf-device-link:hover { border-color: var(--accent); background: var(--bg4); text-decoration: none; }
+.pf-device-link.current { border-color: var(--accent); background: var(--accent-soft); cursor: default; }
+.pf-device-link.current:hover { border-color: var(--accent); background: var(--accent-soft); }
+.pf-device-link .pd-model { font-weight: 500; color: var(--text); }
+.pf-device-link .pd-meta { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.pf-device-link .pd-current-tag { font-size: 9px; color: var(--accent); letter-spacing: .07em; font-family: var(--mono); text-transform: uppercase; margin-top: 1px; }
+.pf-devices-summary { font-size: 12px; color: var(--text3); margin-bottom: 10px; font-family: var(--mono); }
+
 /* ── Reliability ── */
 .reliability-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 600px) { .reliability-grid { grid-template-columns: 1fr; } }
@@ -513,6 +542,51 @@ function multiSel(v) {
 }
 function esc(s) { 
   const d = document.createElement('div'); d.textContent = s; return d.innerHTML; 
+}
+
+// ── Strict-format parsers (Test Patterns + Test Strategies [Abbreviations]) ──
+// Parses Main.Test Patterns text into { patternId -> [abbrev, ...] }.
+// Accepted line format: "{Pattern ID}: {abbrev1}, {abbrev2}, ..."
+// Lines that do not match are ignored (e.g. section headers, narrative notes,
+// "See linked Pattern Figures.", 📌 flags).
+function parseTestPatterns(text) {
+  const map = {};
+  if (!text || typeof text !== 'string') return map;
+  text.split(/\r?\n/).forEach(rawLine => {
+    const line = rawLine.trim();
+    if (!line) return;
+    // Skip structural lines
+    if (line.startsWith('[')) return;
+    if (line.startsWith('See ')) return;
+    if (line.startsWith('📌') || line.startsWith('\u{1F4CC}')) return;
+    if (line.startsWith('•') || line.startsWith('–') || line.startsWith('-')) return;
+    const colon = line.indexOf(':');
+    if (colon < 1) return;
+    const pid = line.slice(0, colon).trim();
+    // Pattern ID validity: skip obviously-non-PID prose like "Note: ..." or "NB: ..."
+    if (pid.length > 40) return;
+    const rest = line.slice(colon + 1).trim();
+    if (!rest) return;
+    const strategies = rest.split(',').map(s => s.trim()).filter(Boolean);
+    if (strategies.length) map[pid] = strategies;
+  });
+  return map;
+}
+
+// Parses Main.Test Strategies [Abbreviations] section into { abbrev -> fullName }.
+function parseAbbreviations(text) {
+  const map = {};
+  if (!text || typeof text !== 'string') return map;
+  let inAbbrev = false;
+  text.split(/\r?\n/).forEach(rawLine => {
+    const line = rawLine.trim();
+    if (/^\[\s*Abbreviations\s*\]/i.test(line)) { inAbbrev = true; return; }
+    if (inAbbrev && /^\[/.test(line)) { inAbbrev = false; return; }
+    if (!inAbbrev || !line) return;
+    const m = line.match(/^([A-Za-z0-9_+\-]+)\s*=\s*(.+)$/);
+    if (m) map[m[1].trim()] = m[2].trim();
+  });
+  return map;
 }
 // Auto-linkify PMID / PMC / DOI / plain URLs inside already-HTML-escaped text.
 // Input MUST come from esc() or equivalent (no untrusted HTML).
@@ -800,12 +874,14 @@ async function renderModel(recId) {
   const rowSel = (label, val) => { const s = multiSel(val); return s ? row(label, s) : ''; };
 
   // Strategies formatted
+  // Highlight ANY bracketed section header ([Abbreviations], [Strategy specifications — per 1985 Manual],
+  // [Pattern-strategy applicability], [Model 605 limitations vs. Models 610/620], etc.)
+  // — matches fmtSections helper behavior used elsewhere.
   let stratHtml = '';
   const strat = f[F.strategies];
   if (strat) {
     stratHtml = esc(strat)
-      .replace(/\[Abbreviations\]/g, '<span class="section-label">[Abbreviations]</span>')
-      .replace(/\[Strategy specifications\]/g, '<span class="section-label">[Strategy specifications]</span>');
+      .replace(/\[([^\]\n]+)\]/g, '<span class="section-label">[$1]</span>');
   }
 
   // References formatted
@@ -1037,6 +1113,20 @@ async function renderPattern(pfId, modelId) {
     try { coords = JSON.parse(coordsRaw); } catch(e) {}
   }
 
+  // ── Strategies available for this pattern on the context device ──
+  // Parse the parent device's strict-format Test Patterns + Abbreviations and
+  // surface the union of strategies keyed by the PF's Pattern ID.
+  const patternIdKey = pf[PF.patternId] || '';
+  const patternsMap = rec ? parseTestPatterns(rec.fields?.[F.patterns]) : {};
+  const abbrevMap = rec ? parseAbbreviations(rec.fields?.[F.strategies]) : {};
+  const strategyCodes = patternsMap[patternIdKey] || [];
+  const strategyChipsHtml = strategyCodes.length
+    ? strategyCodes.map(code => {
+        const full = abbrevMap[code];
+        return `<span class="strategy-chip"><code>${esc(code)}</code>${full ? esc(full) : ''}</span>`;
+      }).join('')
+    : `<span class="sa-empty">No strategies registered for pattern ID "${esc(patternIdKey)}" on this device.</span>`;
+
   let html = `
     <div class="detail-header">
       <div class="detail-title">${esc(patName)}</div>
@@ -1049,6 +1139,11 @@ async function renderPattern(pfId, modelId) {
     </div>
     
     ${pf[PF.description] ? `<p style="color:var(--text2);margin-bottom:16px;font-size:13px">${esc(pf[PF.description])}</p>` : ''}
+
+    <div class="strategies-available">
+      <h3>Strategies available on <span class="sa-device">${esc(modelName || '(this device)')}</span></h3>
+      <div class="strategy-chips">${strategyChipsHtml}</div>
+    </div>
 
     ${osMirror ? '<p style="color:var(--amber);font-size:12px;font-family:var(--mono);margin-bottom:16px">OS = Mirror of OD (left-right reflected)</p>' : ''}
     
@@ -1087,6 +1182,65 @@ async function renderPattern(pfId, modelId) {
         `;})() : ''}
       </div>
     </div>
+
+    ${(() => {
+      // ── Also Available On: linked devices from PF.deviceLink ──
+      const devLinks = Array.isArray(pf[PF.deviceLink]) ? pf[PF.deviceLink] : [];
+      if (!devLinks.length) return '';
+      // Short-year: extract optional "ca." prefix + 4-digit year ("2023", "ca. 1998").
+      const shortYear = s => {
+        const t = String(s || '');
+        const m = t.match(/(?:ca\.\s*)?\b\d{4}\b/);
+        return m ? m[0] : '';
+      };
+      // Short manufacturer: first line, truncate mid-word if too long.
+      const shortMfr = s => {
+        const first = String(s || '').split('\n')[0].trim();
+        return first.length > 42 ? first.slice(0, 40).replace(/[\s,;:·\-]+$/, '') + '…' : first;
+      };
+      // Enrich from allRecords for richer display + sorting; preserve unknown entries.
+      const entries = devLinks.map(dl => {
+        const full = allRecords.find(r => r.id === dl.id);
+        const f = full?.fields || {};
+        const modelRaw = f[F.model] || dl.name || '';
+        return {
+          id: dl.id,
+          model: String(modelRaw).replace(/\r?\n/g, ' ').trim(),
+          mfr: shortMfr(f[F.manufacturer]),
+          year: shortYear(f[F.releaseYear]),
+          yearSort: (s => { const m = String(s || '').match(/\d{4}/); return m ? parseInt(m[0], 10) : 9999; })(f[F.releaseYear]),
+          isCurrent: dl.id === modelId,
+        };
+      });
+      // Sort: manufacturer asc → release year asc → model asc
+      entries.sort((a, b) =>
+        a.mfr.localeCompare(b.mfr) ||
+        (a.yearSort - b.yearSort) ||
+        a.model.localeCompare(b.model)
+      );
+      const others = entries.filter(e => !e.isCurrent).length;
+      const summary = others > 0
+        ? `This pattern geometry is shared across ${entries.length} device${entries.length > 1 ? 's' : ''} (${others} other${others > 1 ? 's' : ''} besides this one).`
+        : `This pattern is currently linked only to this device.`;
+      const cards = entries.map(e => {
+        const curTag = e.isCurrent ? '<span class="pd-current-tag">current device</span>' : '';
+        const meta = [e.mfr, e.year].filter(Boolean).join(' · ');
+        const inner = `<span class="pd-model">${esc(e.model)}</span>${meta ? `<span class="pd-meta">${esc(meta)}</span>` : ''}${curTag}`;
+        return e.isCurrent
+          ? `<div class="pf-device-link current">${inner}</div>`
+          : `<a class="pf-device-link" href="#model/${e.id}">${inner}</a>`;
+      }).join('');
+      const initiallyOpen = entries.length <= 12;
+      return `
+        <div class="detail-section full-width" style="margin-top:20px">
+          <div class="section-head${initiallyOpen ? ' open' : ''}" onclick="toggleSection(this)">ALSO AVAILABLE ON (${entries.length} device${entries.length > 1 ? 's' : ''}) <span class="chevron">▾</span></div>
+          <div class="section-body${initiallyOpen ? '' : ' collapsed'}">
+            <div class="pf-devices-summary">${summary}</div>
+            <div class="pf-devices">${cards}</div>
+          </div>
+        </div>
+      `;
+    })()}
 
     ${pf[PF.uncertaintyNotes] ? `
     <div class="detail-section full-width" style="margin-top:16px">
