@@ -1137,16 +1137,19 @@ function renderPatternSVG(coords, opts) {
     return { x, y, type: c.type, count: c.count };
   }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
 
-  // Auto-fit extent: tight fit to the actual point spread so a 30-2 or
-  // 30-1 pattern doesn't sit inside a 50° frame. 8% margin; rounded up to
-  // the next 5° boundary. Minimum 12° so 10-2 and Macula look reasonable.
+  // Auto-fit extent: round maxR up to the next 10° boundary, then add a
+  // full decade of margin so that a 24-2 pattern (points out to ~28°)
+  // shows its 30° ring with comfortable periphery instead of being pinned
+  // to the frame edge. Small patterns use a half-decade margin to avoid
+  // oversized blank space.
   const maxR = pts.length ? Math.max(...pts.map(p => Math.hypot(p.x, p.y))) : 60;
-  const EXTENT = Math.max(12, Math.ceil((maxR * 1.08) / 5) * 5);
-  // Ring labels every 10° up to (but not including) the boundary. Add a
-  // 5° ring for very small central patterns.
+  const decadeMax = Math.max(10, Math.ceil(maxR / 10) * 10);
+  const EXTENT = decadeMax <= 20 ? decadeMax + 5 : decadeMax + 10;
+  // Ring labels: 5° ring only for very small patterns; then every 10° up
+  // to the decade that covers maxR.
   const rings = [];
-  if (EXTENT <= 20) rings.push(5);
-  for (let r = 10; r <= EXTENT - 2; r += 10) rings.push(r);
+  if (EXTENT <= 15) rings.push(5);
+  for (let r = 10; r <= decadeMax; r += 10) rings.push(r);
   if (!rings.length) rings.push(5);
 
   // Scale stroke/dot/text with extent so 24-2 and Full Field 120 look
@@ -1174,7 +1177,21 @@ function renderPatternSVG(coords, opts) {
       const m = (EXTENT * 0.02).toFixed(2);
       return `<path d="M${cx - m},${cy} L${cx + +m},${cy} M${cx},${cy - m} L${cx},${cy + +m}" stroke="#c43c3c" stroke-width="${stroke}"/>`;
     }
-    return `<circle cx="${cx}" cy="${cy}" r="${pointR}" fill="#1a2332"/>`;
+    // Concentric-circle notation for repeated-test points:
+    //   count=1 → single filled dot
+    //   count=2 → filled dot + 1 outer ring   (⊙)
+    //   count=3 → filled dot + 2 outer rings  (⊚)
+    // The inner dot shrinks slightly for multi-count points so the ring
+    // reads as a distinct element rather than a bigger dot.
+    const count = Math.max(1, Number(p.count) || 1);
+    const inner = (Number(pointR) * (count === 1 ? 1 : 0.68)).toFixed(2);
+    const ringStroke = (Number(stroke) * 1.6).toFixed(3);
+    let svg = `<circle cx="${cx}" cy="${cy}" r="${inner}" fill="#1a2332"/>`;
+    for (let i = 1; i < count; i++) {
+      const rOut = (Number(pointR) * (0.95 + (i - 1) * 0.55)).toFixed(2);
+      svg += `<circle cx="${cx}" cy="${cy}" r="${rOut}" fill="none" stroke="#1a2332" stroke-width="${ringStroke}"/>`;
+    }
+    return svg;
   }).join('');
   const title = label ? `<title>${label}</title>` : '';
   const style = compact
