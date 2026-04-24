@@ -286,6 +286,7 @@ a:hover { text-decoration: underline; }
 
 /* ── Pattern Detail (Level 3) ── */
 .pattern-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.pattern-detail-grid.pattern-single { grid-template-columns: 1fr; }
 @media (max-width: 768px) { .pattern-detail-grid { grid-template-columns: 1fr; } }
 .pattern-image-wrap { text-align: center; }
 .pattern-image-wrap img { max-width: 100%; max-height: 400px; border-radius: var(--radius); border: 1px solid var(--border); }
@@ -1221,6 +1222,34 @@ function renderPatternSVG(coords, opts) {
   return `<svg viewBox="${-EXTENT} ${-EXTENT} ${EXTENT * 2} ${EXTENT * 2}" xmlns="http://www.w3.org/2000/svg" style="${style}">${title}${ringsSvg}${axesSvg}${labelsSvg}${pointsSvg}</svg>`;
 }
 
+// ── Left-right symmetry detector ──
+// Returns true if every point (x,y) has a corresponding point (-x,y) in the
+// same set with the same type. Used to decide whether OS should be rendered
+// separately when osMirror=true: mirroring a symmetric pattern produces an
+// identical figure, so we show a single "OD / OS" panel instead of two
+// visually identical ones. Asymmetric patterns (Nasal Step, Temporal
+// Crescent, patterns with blind-spot markers at the physiologic position)
+// correctly fail this check and still render both eyes.
+function isLeftRightSymmetric(coords, isPolar) {
+  if (!coords || coords.length === 0) return false;
+  // Convert to cartesian so the symmetry check is uniform.
+  const pts = coords.map(c => {
+    if (isPolar) {
+      const rad = (Number(c.theta) * Math.PI) / 180;
+      return { x: Number(c.r) * Math.cos(rad), y: Number(c.r) * Math.sin(rad), type: c.type || 'point' };
+    }
+    return { x: Number(c.x), y: Number(c.y), type: c.type || 'point' };
+  });
+  const eps = 0.05; // tolerance for float rounding from polar conversion
+  return pts.every(p =>
+    pts.some(q =>
+      q.type === p.type &&
+      Math.abs(q.x + p.x) < eps &&  // q.x ≈ -p.x
+      Math.abs(q.y - p.y) < eps
+    )
+  );
+}
+
 // ── Level 3: Pattern Detail ──
 async function renderPattern(pfId, modelId) {
   const rec = allRecords.find(r => r.id === modelId);
@@ -1295,7 +1324,19 @@ async function renderPattern(pfId, modelId) {
   const osRenderCoords = coordsOs.length ? coordsOs : (osMirror && coords.length ? coords : []);
   const osRenderPolar = coordsOs.length ? osIsPolar : isPolar;
   const osRenderMirror = !coordsOs.length && osMirror; // mirror-from-OD flag
-  const showOsSection = osRenderCoords.length || (imgOS && imgOS.length);
+
+  // ── Left-right symmetric patterns collapse into a single panel ──
+  // When the OD point set is symmetric about the y-axis, mirroring it
+  // produces an identical figure. Rendering two identical panels is
+  // redundant and confusing (e.g. Macula, 10-2, 24-2, 30-2). In that
+  // case we render only one panel labeled "OD / OS" and skip the OS
+  // section entirely. We only collapse when OS is mirror-derived — if
+  // the user explicitly provided coordsOS we respect that and render
+  // both panels (they chose to supply separate data).
+  const odOsIdentical = osRenderMirror && coords.length &&
+    isLeftRightSymmetric(coords, isPolar);
+  const showOsSection = !odOsIdentical && (osRenderCoords.length || (imgOS && imgOS.length));
+  const odHeading = odOsIdentical ? 'OD / OS (left-right symmetric)' : 'OD Pattern';
 
   // ── Strategies available for this pattern on the context device ──
   // Parse the parent device's strict-format Test Patterns + Abbreviations and
@@ -1331,9 +1372,9 @@ async function renderPattern(pfId, modelId) {
 
     ${osMirror ? '<p style="color:var(--amber);font-size:12px;font-family:var(--mono);margin-bottom:16px">OS = Mirror of OD (left-right reflected)</p>' : ''}
     
-    <div class="pattern-detail-grid">
+    <div class="pattern-detail-grid${odOsIdentical ? ' pattern-single' : ''}">
       <div>
-        <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">OD Pattern</h3>
+        <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">${esc(odHeading)}</h3>
         <div class="pattern-image-wrap">
           ${coords.length
             ? renderPatternSVG(coords, { isPolar, mirror: false, label: `${esc(patName)} (OD)` })
