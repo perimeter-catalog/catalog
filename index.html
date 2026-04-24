@@ -683,6 +683,22 @@ function countryName(rec) {
   const c = rec.fields?.[F.country];
   return c ? (typeof c === 'object' ? c.name : c) : '';
 }
+// Collect distinct {name, flag} entries across a record list, preserving the
+// order of first appearance (records are SO-sorted, so earliest-dated country
+// comes first). Needed for product groups whose records span multiple countries
+// — e.g. Competer (Sweden origin, then USA distribution) — where showing only
+// the first record's flag would hide the other countries entirely.
+function collectCountries(records) {
+  const seen = new Set();
+  const out = [];
+  for (const r of records) {
+    const name = countryName(r);
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    out.push({ name, flag: flagImg(r) });
+  }
+  return out;
+}
 function extractYear(s) {
   if (!s) return 9999;
   const m = String(s).match(/(\d{4})/);
@@ -748,8 +764,7 @@ function setBreadcrumb(items) {
 
 // ── Level 0: Product List ──
 function productCardHtml(p) {
-  const flag = flagImg(p.first);
-  const country = countryName(p.first);
+  const countries = collectCountries(p.records);
   const types = [...new Set(p.records.map(r => sel(r.fields?.[F.type])).filter(Boolean))];
   const yearStr = p.year < 9999 ? p.year : '?';
 
@@ -766,9 +781,12 @@ function productCardHtml(p) {
   const visible = thumbs.slice(0, MAX_THUMBS);
   const overflow = thumbs.length - visible.length;
 
-  const flagHtml = flag
-    ? `<span class="product-flag-inline"><img src="${flag}" alt="${esc(country)}">${country ? `<span>${esc(country)}</span>` : ''}</span>`
-    : (country ? `<span class="product-flag-inline"><span>${esc(country)}</span></span>` : '');
+  const flagsHtml = countries.map(c => `
+    <span class="product-flag-inline">
+      ${c.flag ? `<img src="${c.flag}" alt="${esc(c.name)}">` : ''}
+      <span>${esc(c.name)}</span>
+    </span>
+  `).join('');
 
   const thumbsHtml = visible.length
     ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy">`).join('')
@@ -786,7 +804,7 @@ function productCardHtml(p) {
       <div class="product-head">
         <div class="product-head-left">
           <div class="product-name">${esc(p.name)}</div>
-          <div class="product-meta-row">${flagHtml}</div>
+          <div class="product-meta-row">${flagsHtml}</div>
         </div>
         <div class="product-year-badge">${yearStr}</div>
       </div>
@@ -897,19 +915,23 @@ function renderProduct(productName) {
     { label: productName, hash: `#product/${encodeURIComponent(productName)}` }
   ]);
 
-  const first = records[0];
-  const flag = flagImg(first);
-  const country = countryName(first);
+  const countries = collectCountries(records);
   const mfrs = [...new Set(records.map(r => g(r, F.manufacturer)).filter(Boolean))];
+
+  const headerFlagsHtml = countries
+    .filter(c => c.flag)
+    .map(c => `<img src="${c.flag}" style="width:28px;border-radius:2px" alt="${esc(c.name)}" title="${esc(c.name)}">`)
+    .join('');
+  const countryNamesText = countries.map(c => c.name).join(', ');
 
   let html = `
     <div class="detail-header">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        ${flag ? `<img src="${flag}" style="width:28px;border-radius:2px" alt="">` : ''}
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+        ${headerFlagsHtml ? `<span style="display:inline-flex;align-items:center;gap:6px">${headerFlagsHtml}</span>` : ''}
         <div class="detail-title">${esc(productName)}</div>
       </div>
       <div class="detail-sub">
-        ${country ? `<span>${esc(country)}</span>` : ''}
+        ${countryNamesText ? `<span>${esc(countryNamesText)}</span>` : ''}
         ${mfrs.length ? `<span>${esc(mfrs[0])}</span>` : ''}
         <span>${records.length} model${records.length>1?'s':''}</span>
       </div>
