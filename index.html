@@ -83,6 +83,25 @@ a:hover { text-decoration: underline; }
 .sort-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .record-count { font-size: 12px; color: var(--text3); font-family: var(--mono); margin-left: auto; }
 
+/* ── Form Factor sections ── */
+.ff-section { margin-bottom: 32px; }
+.ff-section:last-child { margin-bottom: 0; }
+.ff-section-head {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 0 0 10px 2px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.ff-section-title {
+  font-size: 11px; font-family: var(--mono); font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text2);
+}
+.ff-section-count {
+  font-size: 11px; font-family: var(--mono);
+  color: var(--text3);
+}
+
 /* ── Product Cards (Level 0) ── */
 .product-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -389,6 +408,7 @@ const F = {
   manufacturer: 'fldwxHiGz8OOTK1ZL',
   mfrUrl: 'fldnfaKnMsqeAjeXC',
   type: 'fld9QZpSdodLphTkC',
+  formFactor: 'fldLGopFJyRTSZtmf',
   releaseYear: 'fldTpPXnv7lFGBuSb',
   specialComments: 'fldoraPYeEH7xoXGa',
   references: 'fld7YgjnccYZfcpI7',
@@ -465,14 +485,17 @@ const PF = {
 // ═══════════════════════════════════════════════════════════════
 let allRecords = [];
 let pfCache = {};  // recId -> PF data
-let sortMode = 'year'; // 'year' | 'name'
+let sortMode = 'year'; // 'year' | 'name' | 'form_factor'
+
+// Form Factor section ordering (largest-first, per catalog design)
+const FORM_FACTOR_ORDER = ['Table Top', 'HMD/VR', 'Tangent Screen', 'Tablet', 'Software', 'Other'];
 
 // ═══════════════════════════════════════════════════════════════
 // AIRTABLE API
 // ═══════════════════════════════════════════════════════════════
 async function fetchAllMain() {
   const fields = [
-    F.model, F.productName, F.groupSort, F.sortOrder, F.manufacturer, F.type,
+    F.model, F.productName, F.groupSort, F.sortOrder, F.manufacturer, F.type, F.formFactor,
     F.releaseYear, F.country, F.flag, F.displayName, F.specialComments, F.references,
     F.stimType, F.stimLum, F.stimSizes, F.stimDuration, F.stimColors, F.stimInterval, F.stimNumber, F.stimSummary,
     F.bgType, F.bgSummary, F.bgLum, F.bgSize, F.bgColor,
@@ -723,17 +746,75 @@ function setBreadcrumb(items) {
 }
 
 // ── Level 0: Product List ──
+function productCardHtml(p) {
+  const flag = flagImg(p.first);
+  const country = countryName(p.first);
+  const types = [...new Set(p.records.map(r => sel(r.fields?.[F.type])).filter(Boolean))];
+  const yearStr = p.year < 9999 ? p.year : '?';
+
+  // Collect thumbs from records in group (records[0] is lowest SO → oldest first)
+  const thumbs = [];
+  for (const r of p.records) {
+    const imgs = r.fields?.[F.image];
+    if (imgs && imgs.length) {
+      const src = imgs[0].thumbnails?.small?.url || imgs[0].url;
+      if (src) thumbs.push({ src, name: g(r, F.model) || '' });
+    }
+  }
+  const MAX_THUMBS = 6;
+  const visible = thumbs.slice(0, MAX_THUMBS);
+  const overflow = thumbs.length - visible.length;
+
+  const flagHtml = flag
+    ? `<span class="product-flag-inline"><img src="${flag}" alt="${esc(country)}">${country ? `<span>${esc(country)}</span>` : ''}</span>`
+    : (country ? `<span class="product-flag-inline"><span>${esc(country)}</span></span>` : '');
+
+  const thumbsHtml = visible.length
+    ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy">`).join('')
+      + (overflow > 0 ? `<span class="product-thumbs-more">+${overflow}</span>` : '')
+    : `<div class="product-thumb-placeholder" title="No images yet">
+         <svg viewBox="0 0 38 38" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
+           <path d="M7 28 Q7 10 19 8 Q31 10 31 28" fill="none" stroke="currentColor" stroke-width="1.5"/>
+           <circle cx="19" cy="24" r="1.6" fill="currentColor"/>
+           <line x1="19" y1="15" x2="19" y2="22" stroke="currentColor" stroke-width="1.2"/>
+         </svg>
+       </div>`;
+
+  return `
+    <div class="product-card" onclick="location.hash='#product/${encodeURIComponent(p.name)}'">
+      <div class="product-head">
+        <div class="product-head-left">
+          <div class="product-name">${esc(p.name)}</div>
+          <div class="product-meta-row">${flagHtml}</div>
+        </div>
+        <div class="product-year-badge">${yearStr}</div>
+      </div>
+      <div class="product-thumbs">${thumbsHtml}</div>
+      <div class="product-footer">
+        <span class="product-count">${p.records.length} model${p.records.length>1?'s':''}</span>
+        ${types[0] ? `<span class="product-type-tag">${esc(types[0])}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
 function renderProducts() {
   const groups = groupProducts(allRecords);
   const productList = Object.entries(groups).map(([name, records]) => {
     const first = records[0];
     const gs = g(first, F.groupSort);
     const yr = extractYear(gs);
-    return { name, records, year: yr, first };
+    // Distinct Form Factors across all records in the product group.
+    // A product with records on multiple Form Factors will appear once
+    // in each matching section (per catalog design).
+    const formFactors = [...new Set(records.map(r => sel(r.fields?.[F.formFactor])).filter(Boolean))];
+    return { name, records, year: yr, first, formFactors };
   });
 
-  if (sortMode === 'year') productList.sort((a,b) => a.year - b.year);
-  else productList.sort((a,b) => a.name.localeCompare(b.name));
+  // Baseline ordering: Name A-Z only when explicitly picked; otherwise Release Year
+  // (used for both 'year' mode and as the in-section order under 'form_factor').
+  if (sortMode === 'name') productList.sort((a,b) => a.name.localeCompare(b.name));
+  else productList.sort((a,b) => a.year - b.year);
 
   setBreadcrumb([{ label: 'Catalog', hash: '#' }]);
   const metaEl = document.getElementById('headerMeta');
@@ -760,63 +841,35 @@ function renderProducts() {
       <label>SORT BY</label>
       <button class="sort-btn ${sortMode==='year'?'active':''}" onclick="sortMode='year';renderProducts()">Release Year</button>
       <button class="sort-btn ${sortMode==='name'?'active':''}" onclick="sortMode='name';renderProducts()">Name A-Z</button>
+      <button class="sort-btn ${sortMode==='form_factor'?'active':''}" onclick="sortMode='form_factor';renderProducts()">Form Factor</button>
       <span class="record-count">${productList.length} products</span>
     </div>
-    <div class="product-grid">
   `;
 
-  productList.forEach(p => {
-    const flag = flagImg(p.first);
-    const country = countryName(p.first);
-    const types = [...new Set(p.records.map(r => sel(r.fields?.[F.type])).filter(Boolean))];
-    const yearStr = p.year < 9999 ? p.year : '?';
-
-    // Collect thumbs from records in group (records[0] is lowest SO → oldest first)
-    const thumbs = [];
-    for (const r of p.records) {
-      const imgs = r.fields?.[F.image];
-      if (imgs && imgs.length) {
-        const src = imgs[0].thumbnails?.small?.url || imgs[0].url;
-        if (src) thumbs.push({ src, name: g(r, F.model) || '' });
-      }
-    }
-    const MAX_THUMBS = 6;
-    const visible = thumbs.slice(0, MAX_THUMBS);
-    const overflow = thumbs.length - visible.length;
-
-    const flagHtml = flag
-      ? `<span class="product-flag-inline"><img src="${flag}" alt="${esc(country)}">${country ? `<span>${esc(country)}</span>` : ''}</span>`
-      : (country ? `<span class="product-flag-inline"><span>${esc(country)}</span></span>` : '');
-
-    const thumbsHtml = visible.length
-      ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy">`).join('')
-        + (overflow > 0 ? `<span class="product-thumbs-more">+${overflow}</span>` : '')
-      : `<div class="product-thumb-placeholder" title="No images yet">
-           <svg viewBox="0 0 38 38" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
-             <path d="M7 28 Q7 10 19 8 Q31 10 31 28" fill="none" stroke="currentColor" stroke-width="1.5"/>
-             <circle cx="19" cy="24" r="1.6" fill="currentColor"/>
-             <line x1="19" y1="15" x2="19" y2="22" stroke="currentColor" stroke-width="1.2"/>
-           </svg>
-         </div>`;
-
-    html += `
-      <div class="product-card" onclick="location.hash='#product/${encodeURIComponent(p.name)}'">
-        <div class="product-head">
-          <div class="product-head-left">
-            <div class="product-name">${esc(p.name)}</div>
-            <div class="product-meta-row">${flagHtml}</div>
+  if (sortMode === 'form_factor') {
+    // Sectioned rendering. A product appears in every section its records
+    // span. A product with no Form Factor assignment (should not happen
+    // post-S74 backfill, but kept as a safety net) falls into 'Other'
+    // so nothing silently drops out of the catalog.
+    FORM_FACTOR_ORDER.forEach(ff => {
+      const inSection = productList.filter(p =>
+        p.formFactors.length === 0 ? ff === 'Other' : p.formFactors.includes(ff)
+      );
+      if (!inSection.length) return;
+      html += `
+        <div class="ff-section">
+          <div class="ff-section-head">
+            <div class="ff-section-title">${esc(ff)}</div>
+            <div class="ff-section-count">${inSection.length} product${inSection.length>1?'s':''}</div>
           </div>
-          <div class="product-year-badge">${yearStr}</div>
+          <div class="product-grid">${inSection.map(productCardHtml).join('')}</div>
         </div>
-        <div class="product-thumbs">${thumbsHtml}</div>
-        <div class="product-footer">
-          <span class="product-count">${p.records.length} model${p.records.length>1?'s':''}</span>
-          ${types[0] ? `<span class="product-type-tag">${esc(types[0])}</span>` : ''}
-        </div>
-      </div>
-    `;
-  });
-  html += '</div>';
+      `;
+    });
+  } else {
+    html += `<div class="product-grid">${productList.map(productCardHtml).join('')}</div>`;
+  }
+
   $app.innerHTML = html;
 }
 
