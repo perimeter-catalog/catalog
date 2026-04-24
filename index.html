@@ -1178,8 +1178,9 @@ function renderPatternSVG(coords, opts) {
     const cx = p.x, cy = -p.y; // flip y for SVG
     if (p.type === 'blind_spot') {
       // Black filled triangle (pointing up) — conventional perimeter
-      // chart notation for the physiologic blind spot.
-      const s = EXTENT * 0.035;
+      // chart notation for the physiologic blind spot. Sized relative
+      // to pointR (1.6×) so it scales with compact vs full rendering.
+      const s = Number(pointR) * 1.6;
       const topY = cy - s * 1.15;
       const botY = cy + s * 0.58;
       return `<polygon points="${cx},${topY} ${cx - s},${botY} ${cx + s},${botY}" fill="#1a2332"/>`;
