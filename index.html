@@ -1095,6 +1095,53 @@ async function renderModel(recId) {
   }
 }
 
+// ── SVG pattern renderer (from Airtable coord JSON) ──
+// Renders eccentricity rings + axes + test points as inline SVG.
+// Accepts cartesian [{x,y,type?,count?}] or polar [{r,theta,type?,count?}].
+// If mirror=true, x is negated (for OS when osMirror checkbox is set and OS
+// coords are taken from OD).
+function renderPatternSVG(coords, opts) {
+  const { isPolar = false, mirror = false, label = '' } = opts || {};
+  const EXTENT = 70;             // ±70° visible
+  const rings = [10, 20, 30, 40, 50, 60];
+  // Convert coords to (x,y) in visual-field convention (y up = positive)
+  const pts = (coords || []).map(c => {
+    let x, y;
+    if (isPolar) {
+      const rad = (Number(c.theta) * Math.PI) / 180;
+      x = Number(c.r) * Math.cos(rad);
+      y = Number(c.r) * Math.sin(rad);
+    } else {
+      x = Number(c.x);
+      y = Number(c.y);
+    }
+    if (mirror) x = -x;
+    return { x, y, type: c.type, count: c.count };
+  }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+  // SVG coord system: y-axis flipped (we negate y at render time below)
+  const ringsSvg = rings.map(r =>
+    `<circle cx="0" cy="0" r="${r}" fill="none" stroke="#c8d0dc" stroke-width="0.25"/>`
+  ).join('');
+  const axesSvg =
+    `<line x1="${-EXTENT}" y1="0" x2="${EXTENT}" y2="0" stroke="#c8d0dc" stroke-width="0.25"/>` +
+    `<line x1="0" y1="${-EXTENT}" x2="0" y2="${EXTENT}" stroke="#c8d0dc" stroke-width="0.25"/>`;
+  const labelsSvg = rings.map(r =>
+    `<text x="${r + 1.2}" y="-1" font-size="3" fill="#8694a7" font-family="DM Sans,sans-serif">${r}°</text>`
+  ).join('');
+  const pointsSvg = pts.map(p => {
+    const cx = p.x, cy = -p.y; // flip y for SVG
+    if (p.type === 'blind_spot') {
+      return `<ellipse cx="${cx}" cy="${cy}" rx="2.2" ry="3.2" fill="#fff" stroke="#8694a7" stroke-width="0.4"/>`;
+    }
+    if (p.type === 'fixation') {
+      return `<path d="M${cx-1.5},${cy} L${cx+1.5},${cy} M${cx},${cy-1.5} L${cx},${cy+1.5}" stroke="#c43c3c" stroke-width="0.4"/>`;
+    }
+    return `<circle cx="${cx}" cy="${cy}" r="1.1" fill="#1a2332"/>`;
+  }).join('');
+  const title = label ? `<title>${label}</title>` : '';
+  return `<svg viewBox="${-EXTENT} ${-EXTENT} ${EXTENT * 2} ${EXTENT * 2}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;max-height:400px;border-radius:var(--radius);border:1px solid var(--border);background:#fff">${title}${ringsSvg}${axesSvg}${labelsSvg}${pointsSvg}</svg>`;
+}
+
 // ── Level 3: Pattern Detail ──
 async function renderPattern(pfId, modelId) {
   const rec = allRecords.find(r => r.id === modelId);
@@ -1147,31 +1194,29 @@ async function renderPattern(pfId, modelId) {
     try { coords = JSON.parse(coordsRaw); } catch(e) {}
   }
 
-  // ── Pattern image fallback via /pattern_images/ directory ──
-  // The Coord-HFA workflow commits Pattern Image files (PNG+SVG) to
-  // /pattern_images/{slug}_{eye}.png instead of uploading to Airtable
-  // attachment. Catalog falls back to this path when PF.imageOD/OS
-  // attachments are empty. Slug = lower-kebab of Pattern ID:
-  //   "24-2"          → "24-2"
-  //   "30/60-1"       → "30-60-1"
-  //   "Nasal Step"    → "nasal-step"
-  // Patterns whose filenames don't match this slug convention
-  // (e.g., "Central 30-1" → file is "30-1_od.png") will 404 silently
-  // and fall back to "No image available" via onerror.
-  const pfSlug = String(pf[PF.patternId] || '')
-    .toLowerCase()
-    .replace(/\//g, '-')
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9\-]/g, '')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-  const fallbackOdUrl = pfSlug ? `pattern_images/${pfSlug}_od.png` : '';
-  const fallbackOsUrl = pfSlug ? `pattern_images/${pfSlug}_os.png` : '';
-  const odSrc = (imgOD && imgOD.length) ? imgOD[0].url : fallbackOdUrl;
-  const osSrc = (imgOS && imgOS.length) ? imgOS[0].url : fallbackOsUrl;
-  // Show OS section if we have an attachment, or if the pattern is marked
-  // OS=mirror (meaning OS geometry is meaningful) and we can attempt a fallback.
-  const showOsSection = (imgOS && imgOS.length) || (osMirror && fallbackOsUrl);
+  // ── Parse OS coordinates (explicit coordsOS > mirror of OD > attachment) ──
+  const coordsOsRaw = pf[PF.coordsOS];
+  const coordsOsPolarRaw = pf[PF.coordsOsPolar];
+  let coordsOs = [];
+  let osIsPolar = false;
+  if (coordsOsPolarRaw) {
+    try {
+      const p = JSON.parse(coordsOsPolarRaw);
+      if (Array.isArray(p) && p.length > 0 && 'r' in p[0] && 'theta' in p[0]) {
+        osIsPolar = true;
+        coordsOs = p;
+      }
+    } catch(e) {}
+  }
+  if (!osIsPolar && coordsOsRaw) {
+    try { coordsOs = JSON.parse(coordsOsRaw); } catch(e) {}
+  }
+  // OS rendering source: explicit coordsOS wins; else mirror-from-OD if osMirror;
+  // else attachment; else hide section.
+  const osRenderCoords = coordsOs.length ? coordsOs : (osMirror && coords.length ? coords : []);
+  const osRenderPolar = coordsOs.length ? osIsPolar : isPolar;
+  const osRenderMirror = !coordsOs.length && osMirror; // mirror-from-OD flag
+  const showOsSection = osRenderCoords.length || (imgOS && imgOS.length);
 
   // ── Strategies available for this pattern on the context device ──
   // Parse the parent device's strict-format Test Patterns + Abbreviations and
@@ -1211,18 +1256,20 @@ async function renderPattern(pfId, modelId) {
       <div>
         <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">OD Pattern</h3>
         <div class="pattern-image-wrap">
-          ${odSrc
-            ? `<img src="${odSrc}" alt="OD" onclick="openLightbox('${odSrc}')" style="cursor:pointer" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-               <p style="display:none;color:var(--text3);font-size:13px">No image available</p>`
-            : '<p style="color:var(--text3);font-size:13px">No image available</p>'}
+          ${coords.length
+            ? renderPatternSVG(coords, { isPolar, mirror: false, label: `${esc(patName)} (OD)` })
+            : (imgOD && imgOD.length
+                ? `<img src="${imgOD[0].url}" alt="OD" onclick="openLightbox('${imgOD[0].url}')" style="cursor:pointer">`
+                : '<p style="color:var(--text3);font-size:13px">No image available</p>')}
         </div>
       </div>
       <div>
         ${showOsSection ? `
           <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">OS Pattern</h3>
           <div class="pattern-image-wrap">
-            <img src="${osSrc}" alt="OS" onclick="openLightbox('${osSrc}')" style="cursor:pointer" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-            <p style="display:none;color:var(--text3);font-size:13px">No image available</p>
+            ${osRenderCoords.length
+              ? renderPatternSVG(osRenderCoords, { isPolar: osRenderPolar, mirror: osRenderMirror, label: `${esc(patName)} (OS)` })
+              : `<img src="${imgOS[0].url}" alt="OS" onclick="openLightbox('${imgOS[0].url}')" style="cursor:pointer">`}
           </div>
         ` : ''}
         ${coords.length ? (() => {
