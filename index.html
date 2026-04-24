@@ -1153,9 +1153,12 @@ function renderPatternSVG(coords, opts) {
   if (!rings.length) rings.push(5);
 
   // Scale stroke/dot/text with extent so 24-2 and Full Field 120 look
-  // visually consistent regardless of tier.
+  // visually consistent regardless of tier. Compact thumbnails have a
+  // higher dot floor since the display is only ~120px wide.
   const stroke = (EXTENT * 0.004).toFixed(3);
-  const pointR = Math.max(0.4, EXTENT * 0.018).toFixed(2);
+  const pointR = compact
+    ? Math.max(EXTENT * 0.025, 0.6).toFixed(2)
+    : (EXTENT * 0.018).toFixed(2);
   const fontSize = (EXTENT * 0.05).toFixed(2);
 
   const ringsSvg = rings.map(r =>
