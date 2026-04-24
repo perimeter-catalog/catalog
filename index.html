@@ -1137,16 +1137,17 @@ function renderPatternSVG(coords, opts) {
     return { x, y, type: c.type, count: c.count };
   }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
 
-  // Auto-fit extent: pick the tightest ring tier that covers all points,
-  // with small padding so outer points don't sit exactly on the boundary.
+  // Auto-fit extent: tight fit to the actual point spread so a 30-2 or
+  // 30-1 pattern doesn't sit inside a 50° frame. 8% margin; rounded up to
+  // the next 5° boundary. Minimum 12° so 10-2 and Macula look reasonable.
   const maxR = pts.length ? Math.max(...pts.map(p => Math.hypot(p.x, p.y))) : 60;
-  let EXTENT, rings;
-  if (maxR <= 11)      { EXTENT = 15; rings = [5, 10, 15]; }
-  else if (maxR <= 22) { EXTENT = 25; rings = [10, 20]; }
-  else if (maxR <= 28) { EXTENT = 30; rings = [10, 20, 30]; }
-  else if (maxR <= 46) { EXTENT = 50; rings = [10, 20, 30, 40, 50]; }
-  else if (maxR <= 62) { EXTENT = 65; rings = [10, 20, 30, 40, 50, 60]; }
-  else                 { EXTENT = 80; rings = [10, 20, 30, 40, 50, 60, 70, 80]; }
+  const EXTENT = Math.max(12, Math.ceil((maxR * 1.08) / 5) * 5);
+  // Ring labels every 10° up to (but not including) the boundary. Add a
+  // 5° ring for very small central patterns.
+  const rings = [];
+  if (EXTENT <= 20) rings.push(5);
+  for (let r = 10; r <= EXTENT - 2; r += 10) rings.push(r);
+  if (!rings.length) rings.push(5);
 
   // Scale stroke/dot/text with extent so 24-2 and Full Field 120 look
   // visually consistent regardless of tier.
