@@ -1610,8 +1610,6 @@ async function renderPattern(pfId, modelId) {
         <span>${esc(sel(pf[PF.eyeVariant]))}</span>
       </div>
     </div>
-    
-    ${pf[PF.description] ? `<p style="color:var(--text2);margin-bottom:16px;font-size:13px">${esc(pf[PF.description])}</p>` : ''}
 
     <div class="strategies-available">
       <h3>Strategies available on <span class="sa-device">${esc(modelName || '(this device)')}</span></h3>
@@ -1661,6 +1659,13 @@ async function renderPattern(pfId, modelId) {
         `;})() : ''}
       </div>
     </div>
+
+    ${pf[PF.description] ? `
+      <div class="detail-section full-width" style="margin-top:20px">
+        <div class="section-head" onclick="toggleSection(this)">DESCRIPTION <span class="chevron">▾</span></div>
+        <div class="section-body collapsed" style="white-space:pre-wrap;line-height:1.6;color:var(--text2);font-size:13px">${esc(pf[PF.description])}</div>
+      </div>
+    ` : ''}
 
     ${(() => {
       // ── Also Available On: linked devices from PF.deviceLink ──
