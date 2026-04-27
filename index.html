@@ -1104,6 +1104,17 @@ async function renderModel(recId) {
   }
   const row = (label, val) => val ? `<div class="spec-row"><div class="spec-label">${label}</div><div class="spec-value">${esc(String(val))}</div></div>` : '';
   const rowSel = (label, val) => { const s = multiSel(val); return s ? row(label, s) : ''; };
+  // Section helper: omits the entire section (header + body) if no rows have content.
+  // This keeps Overview / aggregator records and any sparse record from showing empty
+  // STIMULUS / BACKGROUND / FIXATION boxes.
+  const sec = (title, rows, opts) => {
+    const body = rows.filter(Boolean).join('');
+    if (!body) return '';
+    const collapsed = opts && opts.collapsed;
+    const headCls = collapsed ? '' : ' open';
+    const bodyCls = collapsed ? ' collapsed' : '';
+    return `<div class="detail-section"><div class="section-head${headCls}" onclick="toggleSection(this)">${title} <span class="chevron">▾</span></div><div class="section-body${bodyCls}">${body}</div></div>`;
+  };
 
   // Strategies formatted
   // Highlight ANY bracketed section header ([Abbreviations], [Strategy specifications — per 1985 Manual],
@@ -1159,51 +1170,39 @@ async function renderModel(recId) {
     <div class="detail-grid">
 
       <!-- Stimulus -->
-      <div class="detail-section">
-        <div class="section-head open" onclick="toggleSection(this)">STIMULUS <span class="chevron">▾</span></div>
-        <div class="section-body">
-          ${rowSel('Type', f[F.stimType])}
-          ${row('Luminance', f[F.stimLum])}
-          ${row('Sizes', f[F.stimSizes])}
-          ${row('Duration', f[F.stimDuration])}
-          ${rowSel('Colors', f[F.stimColors])}
-          ${row('Interval', f[F.stimInterval])}
-          ${row('Number', f[F.stimNumber])}
-        </div>
-      </div>
+      ${sec('STIMULUS', [
+        rowSel('Type', f[F.stimType]),
+        row('Luminance', f[F.stimLum]),
+        row('Sizes', f[F.stimSizes]),
+        row('Duration', f[F.stimDuration]),
+        rowSel('Colors', f[F.stimColors]),
+        row('Interval', f[F.stimInterval]),
+        row('Number', f[F.stimNumber]),
+      ])}
 
       <!-- Background -->
-      <div class="detail-section">
-        <div class="section-head open" onclick="toggleSection(this)">BACKGROUND <span class="chevron">▾</span></div>
-        <div class="section-body">
-          ${rowSel('Type', f[F.bgType])}
-          ${row('Luminance', f[F.bgLum])}
-          ${row('Size', f[F.bgSize])}
-          ${rowSel('Colors', f[F.bgColor])}
-          ${row('Peripheral Range', f[F.peripheralRange])}
-          ${row('Measurement Dist.', f[F.measDist])}
-        </div>
-      </div>
+      ${sec('BACKGROUND', [
+        rowSel('Type', f[F.bgType]),
+        row('Luminance', f[F.bgLum]),
+        row('Size', f[F.bgSize]),
+        rowSel('Colors', f[F.bgColor]),
+        row('Peripheral Range', f[F.peripheralRange]),
+        row('Measurement Dist.', f[F.measDist]),
+      ])}
 
       <!-- Fixation -->
-      <div class="detail-section">
-        <div class="section-head open" onclick="toggleSection(this)">FIXATION MONITOR <span class="chevron">▾</span></div>
-        <div class="section-body">
-          ${rowSel('Type', f[F.fixType])}
-          ${row('Note', f[F.fixNote])}
-        </div>
-      </div>
+      ${sec('FIXATION MONITOR', [
+        rowSel('Type', f[F.fixType]),
+        row('Note', f[F.fixNote]),
+      ])}
 
       <!-- Physical Specs -->
-      <div class="detail-section">
-        <div class="section-head" onclick="toggleSection(this)">PHYSICAL SPECIFICATIONS <span class="chevron">▾</span></div>
-        <div class="section-body collapsed">
-          ${f[F.width] ? row('Width', f[F.width] + ' mm') : ''}
-          ${f[F.depth] ? row('Depth', f[F.depth] + ' mm') : ''}
-          ${f[F.height] ? row('Height', f[F.height] + ' mm') : ''}
-          ${f[F.weight] ? row('Weight', f[F.weight] + ' kg') : ''}
-        </div>
-      </div>
+      ${sec('PHYSICAL SPECIFICATIONS', [
+        f[F.width]  ? row('Width',  f[F.width]  + ' mm') : '',
+        f[F.depth]  ? row('Depth',  f[F.depth]  + ' mm') : '',
+        f[F.height] ? row('Height', f[F.height] + ' mm') : '',
+        f[F.weight] ? row('Weight', f[F.weight] + ' kg') : '',
+      ], { collapsed: true })}
 
       <!-- Analysis -->
       ${f[F.analysis] ? `
