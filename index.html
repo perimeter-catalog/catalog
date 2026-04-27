@@ -1258,8 +1258,8 @@ async function renderModel(recId) {
       <!-- Special Comments -->
       ${f[F.specialComments] ? `
       <div class="detail-section full-width">
-        <div class="section-head" onclick="toggleSection(this)">SPECIAL COMMENTS <span class="chevron">▾</span></div>
-        <div class="section-body collapsed">
+        <div class="section-head open" onclick="toggleSection(this)">SPECIAL COMMENTS <span class="chevron">▾</span></div>
+        <div class="section-body">
           <div class="comments-block">${esc(f[F.specialComments])}</div>
         </div>
       </div>` : ''}
