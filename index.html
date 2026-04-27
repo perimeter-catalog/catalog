@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Automated Perimeter Catalog</title>
+<title>Automated Perimeter Archive</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -477,14 +477,14 @@ a:hover { text-decoration: underline; }
 <body>
 
 <header class="site-header">
-  <div class="site-title" role="link" tabindex="0" title="Back to catalog root"
+  <div class="site-title" role="link" tabindex="0" title="Back to archive root"
        onclick="goHome()"
-       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span>//</span> AUTOMATED PERIMETER CATALOG</div>
+       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span>//</span> AUTOMATED PERIMETER ARCHIVE</div>
   <div class="header-meta" id="headerMeta">Loading...</div>
 </header>
 <nav class="breadcrumb" id="breadcrumb"></nav>
 <main class="container" id="app">
-  <div class="loading"><div class="spinner"></div><p>Fetching catalog data from Airtable...</p></div>
+  <div class="loading"><div class="spinner"></div><p>Fetching archive data from Airtable...</p></div>
 </main>
 
 <!-- Lightbox -->
@@ -933,7 +933,7 @@ function renderProducts() {
     const yr = extractYear(gs);
     // Distinct Form Factors and Countries across the group's records.
     // A product that spans multiple buckets will appear once in each matching
-    // filter (per catalog design — e.g. imo series spans Table Top + HMD/VR,
+    // filter (per archive design — e.g. imo series spans Table Top + HMD/VR,
     // Competer spans Sweden + USA).
     const formFactors = [...new Set(records.map(r => sel(r.fields?.[F.formFactor])).filter(Boolean))];
     const countries = [...new Set(records.map(r => countryName(r)).filter(Boolean))];
@@ -973,10 +973,10 @@ function renderProducts() {
   // Visible list after both filters.
   const visibleList = productList.filter(p => matchFF(p, formFactorFilter) && matchCountry(p, countryFilter));
 
-  setBreadcrumb([{ label: 'Catalog', hash: '#' }]);
+  setBreadcrumb([{ label: 'Archive', hash: '#' }]);
   const metaEl = document.getElementById('headerMeta');
   metaEl.textContent = `${allRecords.length} models · ${productList.length} products`;
-  // Append last-updated timestamp from the catalog repo's latest commit.
+  // Append last-updated timestamp from the archive repo's latest commit.
   // Uses GitHub's public API (no auth needed for public repos). The data is
   // cached by the browser for ~60s. If the fetch fails (offline, rate limit)
   // we silently leave the original counts-only header in place.
@@ -1082,7 +1082,7 @@ function renderProduct(productName) {
   records.sort((a,b) => (gn(a, F.sortOrder)||0) - (gn(b, F.sortOrder)||0));
 
   setBreadcrumb([
-    { label: 'Catalog', hash: '#' },
+    { label: 'Archive', hash: '#' },
     { label: productName, hash: `#product/${encodeURIComponent(productName)}` }
   ]);
 
@@ -1145,7 +1145,7 @@ async function renderModel(recId) {
   const modelName = f[F.model] || '';
 
   setBreadcrumb([
-    { label: 'Catalog', hash: '#' },
+    { label: 'Archive', hash: '#' },
     { label: productName, hash: `#product/${encodeURIComponent(productName)}` },
     { label: modelName, hash: `#model/${recId}` },
   ]);
@@ -1588,7 +1588,7 @@ async function renderPattern(pfId, modelId) {
   const patName = pf[PF.name] || '';
 
   setBreadcrumb([
-    { label: 'Catalog', hash: '#' },
+    { label: 'Archive', hash: '#' },
     { label: productName, hash: `#product/${encodeURIComponent(productName)}` },
     { label: modelName, hash: `#model/${modelId}` },
     { label: patName, hash: `#pattern/${pfId}/${modelId}` },
@@ -1915,7 +1915,7 @@ function goHome() {
   if (lb && lb.classList.contains('open')) closeLightbox(true);
   // Reset any active Level 0 filter so "home" truly means the unfiltered root.
   // sortMode is intentionally left alone (it's a user preference, less
-  // obtrusive than a filter that hides most of the catalog).
+  // obtrusive than a filter that hides most of the archive).
   formFactorFilter = 'all';
   countryFilter = 'all';
   // If already at root, re-render (hashchange won't fire for same hash)
