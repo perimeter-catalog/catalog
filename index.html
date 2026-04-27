@@ -350,6 +350,15 @@ a:hover { text-decoration: underline; }
 .coord-table table { width: 100%; border-collapse: collapse; }
 .coord-table th, .coord-table td { padding: 3px 8px; border-bottom: 1px solid var(--border); text-align: right; }
 .coord-table th { color: var(--text3); position: sticky; top: 0; background: var(--bg2); }
+.coord-provenance { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-family: var(--mono); border: 1px solid; }
+.coord-provenance .cp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.coord-provenance .cp-detail { color: var(--text3); font-style: italic; }
+.coord-provenance[data-prov="Exact"] { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.35); color: #10b981; }
+.coord-provenance[data-prov="Exact"] .cp-dot { background: #10b981; }
+.coord-provenance[data-prov="Image-derived"] { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.35); color: #f59e0b; }
+.coord-provenance[data-prov="Image-derived"] .cp-dot { background: #f59e0b; }
+.coord-provenance[data-prov="Traced"] { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.35); color: #f97316; }
+.coord-provenance[data-prov="Traced"] .cp-dot { background: #f97316; }
 
 /* ── Strategies Available (on Pattern Detail) ── */
 .strategies-available { margin: 24px 0 16px; padding: 14px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
@@ -509,6 +518,7 @@ const PF = {
   measMode: 'fldFA7EP0lTqCjyyM',
   eyeVariant: 'fldBnpVw9nrtsDWrM',
   uncertaintyNotes: 'fldJs6ucpY4TqghW5',
+  provenance: 'fldldHnQQ7h3Um1y5',
   coordsOD: 'fldA40icdOGmJjm6f',
   coordsOS: 'fldFWVwTwAVUcAyCY',
   coordsOdPolar: 'fldkv1UL0IT4zIFAV',
@@ -575,7 +585,7 @@ async function fetchPFForModel(recId) {
   if (!pfIds.length) return [];
   
   const fields = [PF.name, PF.patternId, PF.so, PF.deviceLink, PF.pointCount, 
-    PF.description, PF.category, PF.measMode, PF.eyeVariant, PF.uncertaintyNotes,
+    PF.description, PF.category, PF.measMode, PF.eyeVariant, PF.uncertaintyNotes, PF.provenance,
     PF.coordsOD, PF.coordsOS, PF.coordsOdPolar, PF.coordsOsPolar,
     PF.osMirror, PF.imageOD, PF.imageOS];
   
@@ -1659,6 +1669,24 @@ async function renderPattern(pfId, modelId) {
         `;})() : ''}
       </div>
     </div>
+
+    ${(() => {
+      const prov = sel(pf[PF.provenance]);
+      if (!prov || !coords.length) return '';
+      const detailMap = {
+        'Exact': 'precisely known from spec or regular grid',
+        'Image-derived': 'extracted from figure (may contain small errors)',
+        'Traced': 'traced from original figure (without calibration)',
+      };
+      return `
+      <div style="margin-top:14px">
+        <span class="coord-provenance" data-prov="${esc(prov)}">
+          <span class="cp-dot"></span>
+          <span>${esc(prov)}</span>
+          <span class="cp-detail">— coordinates ${esc(detailMap[prov] || '')}</span>
+        </span>
+      </div>`;
+    })()}
 
     ${pf[PF.description] ? `
       <div class="detail-section full-width" style="margin-top:20px">
