@@ -458,6 +458,7 @@ const F = {
   formFactor: 'fldLGopFJyRTSZtmf',
   releaseYear: 'fldTpPXnv7lFGBuSb',
   specialComments: 'fldoraPYeEH7xoXGa',
+  familyOverview: 'fldI3nRzF0MVQHB4S',
   references: 'fld7YgjnccYZfcpI7',
   country: 'fldx8MTdjBBj5zBUt',
   flag: 'fldZQZL2TXNhUd4iS',
@@ -546,7 +547,7 @@ const FORM_FACTOR_ORDER = ['Table Top', 'HMD/VR', 'Tangent Screen', 'Tablet', 'S
 async function fetchAllMain() {
   const fields = [
     F.model, F.productName, F.groupSort, F.sortOrder, F.manufacturer, F.type, F.formFactor,
-    F.releaseYear, F.country, F.flag, F.displayName, F.specialComments, F.references,
+    F.releaseYear, F.country, F.flag, F.displayName, F.specialComments, F.familyOverview, F.references,
     F.stimType, F.stimLum, F.stimSizes, F.stimDuration, F.stimColors, F.stimInterval, F.stimNumber, F.stimSummary,
     F.bgType, F.bgSummary, F.bgLum, F.bgSize, F.bgColor,
     F.fixType, F.fixNote, F.fixMonitor,
@@ -1167,6 +1168,13 @@ async function renderModel(recId) {
         </div>
       </div>
     </div>` : ''}
+    ${f[F.familyOverview] ? `
+    <div class="detail-section full-width" style="margin-bottom:20px">
+      <div class="section-head open" onclick="toggleSection(this)">FAMILY OVERVIEW <span class="chevron">▾</span></div>
+      <div class="section-body">
+        <div class="comments-block">${esc(f[F.familyOverview])}</div>
+      </div>
+    </div>` : ''}
     <div class="detail-grid">
 
       <!-- Stimulus -->
@@ -1258,8 +1266,8 @@ async function renderModel(recId) {
       <!-- Special Comments -->
       ${f[F.specialComments] ? `
       <div class="detail-section full-width">
-        <div class="section-head open" onclick="toggleSection(this)">SPECIAL COMMENTS <span class="chevron">▾</span></div>
-        <div class="section-body">
+        <div class="section-head" onclick="toggleSection(this)">SPECIAL COMMENTS <span class="chevron">▾</span></div>
+        <div class="section-body collapsed">
           <div class="comments-block">${esc(f[F.specialComments])}</div>
         </div>
       </div>` : ''}
