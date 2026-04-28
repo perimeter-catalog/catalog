@@ -562,6 +562,8 @@ const F = {
   reliabilityNote: 'fldSfmiDHOnJCyL5i',
   // Image
   image: 'fldaxoYmuozwWClgj',
+  // Meta
+  lastModified: 'fldHZlSCKIS6nVWrJ',
 };
 
 // PF Field IDs
@@ -584,6 +586,7 @@ const PF = {
   osMirror: 'fld6gVu0xkSnyjoi3',
   imageOD: 'fldjmQJSfPz95Ql3Z',
   imageOS: 'fld5vxKF3FdUa7F1f',
+  lastModified: 'fld55IMcyCDSoYv7f',
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -613,7 +616,7 @@ async function fetchAllMain() {
     F.analysis, F.platformNotes,
     F.width, F.depth, F.height, F.weight, F.dims,
     F.fpDetection, F.fnDetection, F.retestMethod, F.reliabilityNote,
-    F.mfrUrl, F.image,
+    F.mfrUrl, F.image, F.lastModified,
   ];
   let all = [], offset = null;
   do {
@@ -999,22 +1002,44 @@ function renderProducts() {
   setBreadcrumb([{ label: 'Archive', hash: '#' }]);
   const metaEl = document.getElementById('headerMeta');
   metaEl.textContent = `${allRecords.length} models · ${productList.length} products`;
-  // Append last-updated timestamp from the archive repo's latest commit.
-  // Uses GitHub's public API (no auth needed for public repos). The data is
-  // cached by the browser for ~60s. If the fetch fails (offline, rate limit)
+  // Append last-updated timestamp from Airtable Last Modified fields.
+  // Computes max across Main + PF tables to reflect any DB edit (not only
+  // catalog code commits). For Main, uses the already-loaded allRecords;
+  // for PF, fetches just the single most-recently-modified record (one round
+  // trip, sorted by Last Modified desc, pageSize=1). If either source fails
   // we silently leave the original counts-only header in place.
-  fetch('https://api.github.com/repos/perimeter-catalog/catalog/commits/main')
-    .then(r => r.ok ? r.json() : null)
-    .then(j => {
-      if (!j || !j.commit || !j.commit.committer) return;
-      const iso = j.commit.committer.date;
-      const d = new Date(iso);
-      // "2026-04-25 21:15 JST" style: always display in user's local zone
-      const pad = n => String(n).padStart(2, '0');
-      const stamp = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      metaEl.textContent = `${allRecords.length} models · ${productList.length} products · updated ${stamp}`;
-    })
-    .catch(() => {});
+  (async () => {
+    let mainMax = 0;
+    for (const r of allRecords) {
+      const lm = r.fields?.[F.lastModified];
+      if (!lm) continue;
+      const t = new Date(lm).getTime();
+      if (Number.isFinite(t) && t > mainMax) mainMax = t;
+    }
+    let pfMax = 0;
+    try {
+      const pfUrl = `https://api.airtable.com/v0/${BASE_ID}/${PF_TABLE}`
+        + `?pageSize=1&returnFieldsByFieldId=true`
+        + `&fields%5B%5D=${PF.lastModified}`
+        + `&sort%5B0%5D%5Bfield%5D=${PF.lastModified}`
+        + `&sort%5B0%5D%5Bdirection%5D=desc`;
+      const res = await fetch(pfUrl, { headers: { Authorization: `Bearer ${TOKEN}` } });
+      if (res.ok) {
+        const data = await res.json();
+        const lm = data.records?.[0]?.fields?.[PF.lastModified];
+        if (lm) {
+          const t = new Date(lm).getTime();
+          if (Number.isFinite(t)) pfMax = t;
+        }
+      }
+    } catch(e) { /* silent */ }
+    const max = Math.max(mainMax, pfMax);
+    if (max <= 0) return;
+    const d = new Date(max);
+    const pad = n => String(n).padStart(2, '0');
+    const stamp = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    metaEl.textContent = `${allRecords.length} models · ${productList.length} products · updated ${stamp}`;
+  })();
 
   // Country name → flag attachment URL, from the first record per country that
   // has a flag attachment. The Country dropdown uses a custom component (not
