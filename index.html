@@ -697,10 +697,34 @@ function esc(s) {
 function parseTestPatterns(text) {
   const map = {};
   if (!text || typeof text !== 'string') return map;
+  // Preferred: a dedicated machine-readable section keyed by Pattern ID.
+  // We look for [Pattern Strategy Map] (or [PatternStrategyMap]) and parse
+  // strict "PatternID: strat1, strat2, ..." lines until the next [Section].
+  // This lets the human-readable Test Patterns text use any narrative style
+  // (bullets, sub-headings, prose) without confusing the parser.
+  let inMap = false;
+  text.split(/\r?\n/).forEach(rawLine => {
+    const line = rawLine.trim();
+    if (/^\[\s*pattern\s*strategy\s*map\s*\]/i.test(line)) { inMap = true; return; }
+    if (inMap && /^\[/.test(line)) { inMap = false; return; }
+    if (!inMap || !line) return;
+    if (line.startsWith('//') || line.startsWith('#')) return; // allow comments
+    const colon = line.indexOf(':');
+    if (colon < 1) return;
+    const pid = line.slice(0, colon).trim();
+    if (!pid || pid.length > 60) return;
+    const rest = line.slice(colon + 1).trim();
+    if (!rest) return;
+    const strategies = rest.split(',').map(s => s.trim()).filter(Boolean);
+    if (strategies.length) map[pid] = strategies;
+  });
+  if (Object.keys(map).length) return map;
+  // Fallback: legacy strict-format parsing (1 line per pattern, no header).
+  // Kept for backward compatibility with records that haven't been migrated
+  // to use a dedicated [Pattern Strategy Map] section yet.
   text.split(/\r?\n/).forEach(rawLine => {
     const line = rawLine.trim();
     if (!line) return;
-    // Skip structural lines
     if (line.startsWith('[')) return;
     if (line.startsWith('See ')) return;
     if (line.startsWith('📌') || line.startsWith('\u{1F4CC}')) return;
@@ -708,7 +732,6 @@ function parseTestPatterns(text) {
     const colon = line.indexOf(':');
     if (colon < 1) return;
     const pid = line.slice(0, colon).trim();
-    // Pattern ID validity: skip obviously-non-PID prose like "Note: ..." or "NB: ..."
     if (pid.length > 40) return;
     const rest = line.slice(colon + 1).trim();
     if (!rest) return;
