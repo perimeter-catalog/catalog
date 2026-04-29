@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Automated Perimeter Archive</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.4/photoswipe.css">
 <style>
 :root {
   --bg: #eef1f5;
@@ -304,35 +305,76 @@ a:hover { text-decoration: underline; }
 .spec-label { color: var(--text3); min-width: 140px; flex-shrink: 0; font-family: var(--mono); font-size: 11px; }
 .spec-value { color: var(--text); word-break: break-word; white-space: pre-wrap; }
 
-/* ── Image gallery ── */
+/* ── Lightbox (PhotoSwipe v5 — Microsoft Photos style) ── */
+.pswp { --pswp-bg: #0f1216; }
+.pswp__bg { background: rgba(15,18,22,0.96); }
+/* Outer arrows: small circles at viewport edges, OUTSIDE the image frame */
+.pswp__button--arrow {
+  width: 44px !important;
+  height: 44px !important;
+  margin-top: -22px !important;
+  background: rgba(255,255,255,0.08) !important;
+  border-radius: 50% !important;
+  transition: background 0.15s, opacity 0.15s;
+  opacity: 0.85;
+}
+.pswp__button--arrow:hover { background: rgba(255,255,255,0.22) !important; opacity: 1; }
+.pswp__button--arrow--prev { left: 16px !important; }
+.pswp__button--arrow--next { right: 16px !important; }
+.pswp__button--arrow .pswp__icn {
+  width: 24px; height: 24px; top: 10px; left: 10px;
+  fill: none; color: #fff; opacity: 1;
+}
+.pswp__button--arrow .pswp__icn use { display: none; }
+/* Counter (top-left) */
+.pswp__counter {
+  font-family: var(--mono); font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  height: 40px; line-height: 40px;
+  padding: 0 14px; opacity: 1;
+  text-shadow: none; background: transparent;
+}
+/* Close button (top-right) */
+.pswp__button--close {
+  opacity: 0.8;
+  transition: opacity 0.15s, background 0.15s;
+  border-radius: 50%;
+}
+.pswp__button--close:hover { opacity: 1; background: rgba(255,255,255,0.18) !important; }
+/* Caption — Microsoft Photos style: bottom-centered pill */
+.pswp__caption {
+  position: absolute;
+  bottom: 18px; left: 50%; transform: translateX(-50%);
+  max-width: 80%;
+  color: rgba(255,255,255,0.88);
+  font-family: var(--font); font-size: 13px;
+  text-align: center;
+  background: rgba(0,0,0,0.45);
+  padding: 6px 14px;
+  border-radius: 16px;
+  pointer-events: none;
+  z-index: 10;
+}
+.pswp__caption:empty { display: none; }
+/* Disable arrow when at endpoints (PhotoSwipe doesn't disable by default but visually feels right) */
+.pswp__button--arrow[disabled] { opacity: 0.25 !important; cursor: default; }
+
+/* ── Image gallery thumbnails ── */
 .image-gallery { display: flex; gap: 8px; flex-wrap: wrap; }
 .image-gallery figure {
   margin: 0; max-width: 200px; text-align: center;
 }
-.image-gallery img { 
+.image-gallery a { display: block; }
+.image-gallery img {
   max-width: 200px; max-height: 200px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); cursor: pointer; transition: transform .15s;
   object-fit: contain; background: var(--bg);
 }
-.image-gallery img:hover { transform: scale(1.03); border-color: var(--accent); }
+.image-gallery a:hover img { transform: scale(1.03); border-color: var(--accent); }
 .image-gallery figcaption {
   font-size: 11px; color: var(--muted); margin-top: 4px;
   line-height: 1.3; word-break: break-word;
 }
-
-/* ── Lightbox ── */
-.lightbox {
-  position: fixed; inset: 0; background: rgba(0,0,0,.92);
-  z-index: 1000; display: flex; align-items: center; justify-content: center;
-  cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .2s;
-}
-.lightbox.open { opacity: 1; pointer-events: auto; }
-.lightbox img { max-width: 92vw; max-height: 92vh; border-radius: var(--radius); object-fit: contain; }
-.lightbox-close {
-  position: absolute; top: 16px; right: 20px; font-size: 28px;
-  color: #fff; cursor: pointer; opacity: .7;
-}
-.lightbox-close:hover { opacity: 1; }
 
 /* ── Strategies ── */
 .strategies-block { font-size: 13px; white-space: pre-wrap; font-family: var(--mono); line-height: 1.6; }
@@ -487,11 +529,7 @@ a:hover { text-decoration: underline; }
   <div class="loading"><div class="spinner"></div><p>Fetching archive data from Airtable...</p></div>
 </main>
 
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
-  <span class="lightbox-close">&times;</span>
-  <img id="lightboxImg" src="" alt="">
-</div>
+<!-- PhotoSwipe v5 lightbox is initialized via the module script at the bottom of body -->
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -848,39 +886,46 @@ function groupProducts(records) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LIGHTBOX
+// LIGHTBOX (PhotoSwipe v5 wrapper)
+// The actual PhotoSwipeLightbox instance is created in the
+// type="module" script at the bottom of <body>. This section
+// exposes a backward-compatible API for the rest of the code.
 // ═══════════════════════════════════════════════════════════════
-const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-let lbHistoryPushed = false;
-let lbPreloader = null;
-function openLightbox(src) {
-  const lb = document.getElementById('lightbox');
-  const img = document.getElementById('lightboxImg');
-  if (lbPreloader) lbPreloader.onload = null;
-  img.src = BLANK_GIF;
-  lb.classList.add('open');
-  lbHistoryPushed = true;
-  history.pushState({ lightbox: true }, '');
-  lbPreloader = new Image();
-  lbPreloader.onload = () => {
-    if (lb.classList.contains('open')) img.src = src;
-  };
-  lbPreloader.src = src;
-}
-function closeLightbox(fromPopstate) {
-  const lb = document.getElementById('lightbox');
-  if (!lb.classList.contains('open')) return;
-  if (lbPreloader) { lbPreloader.onload = null; lbPreloader = null; }
-  lb.classList.remove('open');
-  document.getElementById('lightboxImg').src = BLANK_GIF;
-  if (!fromPopstate && lbHistoryPushed) {
-    lbHistoryPushed = false;
-    history.back();
+function openLightbox(srcOrItems, idx) {
+  let items, index;
+  if (typeof srcOrItems === 'string') {
+    // Legacy single-image call: openLightbox('url')
+    items = [{ src: srcOrItems, width: 0, height: 0, alt: '' }];
+    index = 0;
+  } else if (Array.isArray(srcOrItems)) {
+    items = srcOrItems;
+    index = idx || 0;
   } else {
-    lbHistoryPushed = false;
+    return;
+  }
+  if (window.openPSLightbox) {
+    window.openPSLightbox(items, index);
+  } else {
+    // Module not yet loaded — fallback: open in new tab
+    window.open(items[index].src, '_blank');
   }
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+function closeLightbox() {
+  if (window.closePSLightbox) window.closePSLightbox();
+}
+// Helper: open a single Pattern OD/OS image (called from inline onclick)
+function openPatternImage(eye) {
+  const img = window._patternImages && window._patternImages[eye];
+  if (!img) return;
+  openLightbox([{
+    src: img.url,
+    width: img.width || 0,
+    height: img.height || 0,
+    alt: 'Pattern ' + eye.toUpperCase()
+  }], 0);
+}
+// Note: keyboard Esc handling is built into PhotoSwipe v5.
+// Browser back-button popstate handling is wired up inside the module script.
 
 // ═══════════════════════════════════════════════════════════════
 // RENDERING
@@ -1253,6 +1298,16 @@ async function renderModel(recId) {
 
   // Images
   const images = f[F.image] || [];
+  // Stash gallery items for the lightbox (latest renderModel call wins).
+  // Each item gets explicit width/height from Airtable attachment metadata
+  // so PhotoSwipe can do the smooth zoom-from-thumbnail animation.
+  window._currentGallery = images.map(img => ({
+    src: img.url,
+    msrc: (img.thumbnails && img.thumbnails.large && img.thumbnails.large.url) || img.url,
+    width: img.width || 0,
+    height: img.height || 0,
+    alt: imgCaption(img.filename) || modelName
+  }));
 
   // Fetch PF records
   const pfPromise = fetchPFForModel(recId);
@@ -1271,7 +1326,7 @@ async function renderModel(recId) {
       <div class="section-head open" onclick="toggleSection(this)">PHOTOS (${images.length}) <span class="chevron">▾</span></div>
       <div class="section-body">
         <div class="image-gallery">
-          ${images.map(img => { const cap = imgCaption(img.filename); return `<figure><img src="${img.thumbnails?.large?.url || img.url}" alt="${cap || esc(modelName)}" onclick="openLightbox('${img.url}')">${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; }).join('')}
+          ${images.map((img, idx) => { const cap = imgCaption(img.filename); const thumb = (img.thumbnails && img.thumbnails.large && img.thumbnails.large.url) || img.url; return `<figure><a href="${img.url}" onclick="event.preventDefault();openLightbox(window._currentGallery,${idx});return false;"><img src="${thumb}" alt="${cap || esc(modelName)}"></a>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; }).join('')}
         </div>
       </div>
     </div>` : (f[F.familyOverview] ? `
@@ -1768,7 +1823,7 @@ async function renderPattern(pfId, modelId) {
           ${coords.length
             ? renderPatternSVG(coords, { isPolar, mirror: false, label: `${esc(patName)} (OD)` })
             : (imgOD && imgOD.length
-                ? `<img src="${imgOD[0].url}" alt="OD" onclick="openLightbox('${imgOD[0].url}')" style="cursor:pointer">`
+                ? (() => { window._patternImages = window._patternImages || {}; window._patternImages.od = imgOD[0]; return `<img src="${imgOD[0].url}" alt="OD" onclick="openPatternImage('od')" style="cursor:pointer">`; })()
                 : '<p style="color:var(--text3);font-size:13px">No image available</p>')}
         </div>
       </div>
@@ -1778,7 +1833,7 @@ async function renderPattern(pfId, modelId) {
           <div class="pattern-image-wrap">
             ${osRenderCoords.length
               ? renderPatternSVG(osRenderCoords, { isPolar: osRenderPolar, mirror: osRenderMirror, label: `${esc(patName)} (OS)` })
-              : `<img src="${imgOS[0].url}" alt="OS" onclick="openLightbox('${imgOS[0].url}')" style="cursor:pointer">`}
+              : (() => { window._patternImages = window._patternImages || {}; window._patternImages.os = imgOS[0]; return `<img src="${imgOS[0].url}" alt="OS" onclick="openPatternImage('os')" style="cursor:pointer">`; })()}
           </div>
         ` : ''}
         ${coords.length ? (() => {
@@ -1958,9 +2013,8 @@ function selectCountry(val) {
 }
 
 function goHome() {
-  // Close lightbox if open
-  const lb = document.getElementById('lightbox');
-  if (lb && lb.classList.contains('open')) closeLightbox(true);
+  // Close lightbox if open (PhotoSwipe handles its own state internally)
+  closeLightbox();
   // Reset any active Level 0 filter so "home" truly means the unfiltered root.
   // sortMode is intentionally left alone (it's a user preference, less
   // obtrusive than a filter that hides most of the archive).
@@ -2006,11 +2060,8 @@ async function init() {
       if (!r.fields) r.fields = {};
     });
     window.addEventListener('hashchange', route);
-    window.addEventListener('popstate', e => {
-      if (document.getElementById('lightbox').classList.contains('open')) {
-        closeLightbox(true);
-      }
-    });
+    // Note: popstate-driven lightbox close is handled inside the
+    // PhotoSwipe module script at the bottom of <body>.
     route();
   } catch(e) {
     $app.innerHTML = `<div class="loading"><p style="color:var(--red)">Error loading data: ${esc(e.message)}</p></div>`;
@@ -2019,6 +2070,102 @@ async function init() {
 }
 
 init();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- PhotoSwipe v5 lightbox (Microsoft Photos style)                   -->
+<!-- Loaded as ES module for native browser import.                    -->
+<!-- Exposes window.openPSLightbox / window.closePSLightbox.            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<script type="module">
+  import PhotoSwipeLightbox from 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.4/photoswipe-lightbox.esm.min.js';
+
+  const lightbox = new PhotoSwipeLightbox({
+    pswpModule: () => import('https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.4/photoswipe.esm.min.js'),
+    bgOpacity: 0.96,
+    showHideAnimationType: 'fade',
+    paddingFn: () => ({ top: 40, bottom: 60, left: 72, right: 72 }),
+    // Custom SVG icons (thin-stroke chevrons + X), Microsoft Photos style
+    arrowPrevSVG: '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M12 4 L6 10 L12 16"/></svg>',
+    arrowNextSVG: '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M8 4 L14 10 L8 16"/></svg>',
+    closeSVG: '<svg aria-hidden="true" class="pswp__icn" viewBox="0 0 14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"><path d="M2 2 L12 12 M12 2 L2 12"/></svg>',
+    // Disable PhotoSwipe's built-in zoom button — pinch/wheel/double-tap still work,
+    // we just don't need the toolbar zoom button cluttering the UI
+    zoom: false
+  });
+
+  // Caption UI element (Microsoft Photos style: bottom-centered pill)
+  lightbox.on('uiRegister', () => {
+    lightbox.pswp.ui.registerElement({
+      name: 'caption',
+      order: 9,
+      isButton: false,
+      appendTo: 'root',
+      html: '',
+      onInit: (el, pswp) => {
+        el.classList.add('pswp__caption');
+        pswp.on('change', () => {
+          const slide = pswp.currSlide && pswp.currSlide.data;
+          el.textContent = (slide && slide.alt) || '';
+        });
+      }
+    });
+  });
+
+  // Browser back-button support: push state on open, pop on close,
+  // and respond to popstate by closing
+  let pswpHistoryPushed = false;
+  let pswpClosingFromPopstate = false;
+  lightbox.on('afterInit', () => {
+    pswpHistoryPushed = true;
+    history.pushState({ pswp: true }, '');
+  });
+  lightbox.on('close', () => {
+    if (pswpHistoryPushed && !pswpClosingFromPopstate) {
+      pswpHistoryPushed = false;
+      // Walk back the pushed entry so the URL bar stays clean
+      if (history.state && history.state.pswp) {
+        history.back();
+      }
+    }
+    pswpHistoryPushed = false;
+    pswpClosingFromPopstate = false;
+  });
+  window.addEventListener('popstate', () => {
+    if (lightbox.pswp) {
+      pswpClosingFromPopstate = true;
+      lightbox.pswp.close();
+    }
+  });
+
+  lightbox.init();
+
+  // Public API ────────────────────────────────────────────────
+  window.openPSLightbox = (items, index) => {
+    if (!items || !items.length) return;
+    // Normalize: ensure each item has at least { src, width, height }.
+    // PhotoSwipe accepts width=0 (it'll detect dimensions from the loaded image,
+    // losing the smooth zoom animation but otherwise fully functional).
+    const data = items.map(it => ({
+      src: it.src,
+      msrc: it.msrc,
+      srcset: it.srcset,
+      width: it.width || 0,
+      height: it.height || 0,
+      alt: it.alt || ''
+    }));
+    if (lightbox.pswp) {
+      // Already open — switch dataSource and goTo the requested slide
+      lightbox.pswp.close();
+      setTimeout(() => lightbox.loadAndOpen(index || 0, data), 50);
+    } else {
+      lightbox.loadAndOpen(index || 0, data);
+    }
+  };
+  window.closePSLightbox = () => {
+    if (lightbox.pswp) lightbox.pswp.close();
+  };
+  window.isLightboxOpen = () => Boolean(lightbox.pswp);
 </script>
 </body>
 </html>
