@@ -324,6 +324,12 @@ a:hover { text-decoration: underline; }
 .pswp__button--arrow:hover { background: rgba(255,255,255,0.22) !important; opacity: 1; }
 .pswp__button--arrow--prev { left: 16px !important; }
 .pswp__button--arrow--next { right: 16px !important; }
+/* Force visible on touch devices. PhotoSwipe v5 default photoswipe.css
+   wraps arrows in @media (any-pointer: fine) and sets visibility: hidden
+   on coarse-pointer (touch) devices. We want arrows on mobile too. */
+.pswp__button--arrow {
+  visibility: visible !important;
+}
 /* Force chevron stroke to be white regardless of PhotoSwipe default cascade.
    The arrow SVG (provided via arrowPrevSVG / arrowNextSVG options below)
    is rendered as a direct child of the button. */
