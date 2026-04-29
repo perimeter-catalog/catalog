@@ -234,6 +234,27 @@ a:hover { text-decoration: underline; }
   cursor: pointer; transition: all .15s;
   display: grid; grid-template-columns: auto 48px 1fr auto; gap: 14px; align-items: center;
 }
+/* Mobile: drop the year onto a 2nd row beneath the name, so the
+   name+manufacturer column gets full remaining width instead of being
+   squeezed by the year (which can be up to 30 chars of mono font like
+   "ca. 1977-1978 (📌 replaced Mod"). PC layout unchanged. */
+@media (max-width: 599px) {
+  .model-row {
+    grid-template-columns: auto 48px 1fr;
+    grid-template-areas:
+      "so thumb name"
+      "so thumb year";
+    column-gap: 12px;
+    row-gap: 4px;
+    align-items: start;
+  }
+  .model-row > .model-so { grid-area: so; align-self: center; }
+  .model-row > .model-thumb,
+  .model-row > .model-thumb-empty,
+  .model-row > .model-thumb-overview { grid-area: thumb; align-self: center; }
+  .model-row > .model-name-block { grid-area: name; }
+  .model-row > .model-year { grid-area: year; }
+}
 .model-row:hover { border-color: var(--accent); background: var(--bg3); }
 .model-so { font-family: var(--mono); font-size: 12px; color: var(--text3); min-width: 32px; text-align: right; }
 .model-thumb { width: 48px; height: 36px; object-fit: contain; border-radius: 4px; background: var(--bg); display: block; }
@@ -1286,7 +1307,7 @@ function renderProduct(productName) {
       <div class="model-row${isOverview ? ' model-row-overview' : ''}" onclick="location.hash='#model/${r.id}'">
         <div class="model-so">${so ?? ''}</div>
         ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy">` : isOverview ? overviewThumb : '<div class="model-thumb-empty"><svg viewBox="0 0 48 36" width="48" height="36" xmlns="http://www.w3.org/2000/svg"><path d="M8 30 Q8 10 24 8 Q40 10 40 30" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"/><circle cx="24" cy="26" r="2" fill="currentColor" opacity=".3"/><line x1="24" y1="18" x2="24" y2="24" stroke="currentColor" stroke-width="1" opacity=".2"/></svg></div>'}
-        <div>
+        <div class="model-name-block">
           <div class="model-name">${esc(name)}${isOverview ? '<span class="overview-badge">FAMILY OVERVIEW</span>' : ''}</div>
           <div class="model-mfr">${esc(mfr ? mfr.split('\n')[0] : '')} ${tp ? '· '+esc(tp) : ''}</div>
         </div>
