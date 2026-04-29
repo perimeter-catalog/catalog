@@ -324,11 +324,18 @@ a:hover { text-decoration: underline; }
 .pswp__button--arrow:hover { background: rgba(255,255,255,0.22) !important; opacity: 1; }
 .pswp__button--arrow--prev { left: 16px !important; }
 .pswp__button--arrow--next { right: 16px !important; }
-/* Force visible on touch devices. PhotoSwipe v5 default photoswipe.css
-   wraps arrows in @media (any-pointer: fine) and sets visibility: hidden
-   on coarse-pointer (touch) devices. We want arrows on mobile too. */
+/* Force visible on touch devices. PhotoSwipe v5 default CSS has rules:
+     .pswp--touch .pswp__button--arrow { visibility: hidden; }
+     .pswp--has_mouse .pswp__button--arrow { visibility: visible; }
+   The .pswp--touch class is added dynamically when a touch event fires
+   (ie. always, on mobile). We override with multiple high-specificity
+   selectors to bulletproof against any future PhotoSwipe rule changes. */
+.pswp .pswp__button--arrow,
+.pswp.pswp--touch .pswp__button--arrow,
+.pswp.pswp--has_mouse .pswp__button--arrow,
 .pswp__button--arrow {
   visibility: visible !important;
+  display: flex !important;
 }
 /* Force chevron stroke to be white regardless of PhotoSwipe default cascade.
    The arrow SVG (provided via arrowPrevSVG / arrowNextSVG options below)
@@ -2157,6 +2164,16 @@ init();
   lightbox.on('afterInit', () => {
     pswpHistoryPushed = true;
     history.pushState({ pswp: true }, '');
+    // Belt-and-suspenders: force-show arrow buttons on touch devices.
+    // PhotoSwipe v5 hides them via .pswp--touch CSS class. We already
+    // override via CSS !important, but in case some browsers / cached
+    // CSS evaluate differently, set inline style with priority too.
+    setTimeout(() => {
+      document.querySelectorAll('.pswp__button--arrow').forEach(btn => {
+        btn.style.setProperty('visibility', 'visible', 'important');
+        btn.style.setProperty('display', 'flex', 'important');
+      });
+    }, 50);
   });
   lightbox.on('close', () => {
     if (pswpHistoryPushed && !pswpClosingFromPopstate) {
