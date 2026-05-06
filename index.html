@@ -715,6 +715,7 @@ const PF = {
   osMirror: 'fld6gVu0xkSnyjoi3',
   imageOD: 'fldjmQJSfPz95Ql3Z',
   imageOS: 'fld5vxKF3FdUa7F1f',
+  displayPrimary: 'fldIEZSlAnwaILPpI',  // singleSelect: 'cart' | 'polar' | blank (=polar fallback)
   lastModified: 'fld55IMcyCDSoYv7f',
 };
 
@@ -777,7 +778,7 @@ async function fetchPFForModel(recId) {
   const fields = [PF.name, PF.patternId, PF.so, PF.deviceLink, PF.pointCount, 
     PF.description, PF.category, PF.measMode, PF.eyeVariant, PF.uncertaintyNotes, PF.provenance,
     PF.coordsOD, PF.coordsOS, PF.coordsOdPolar, PF.coordsOsPolar,
-    PF.osMirror, PF.imageOD, PF.imageOS];
+    PF.osMirror, PF.imageOD, PF.imageOS, PF.displayPrimary];
   
   let allPF = [];
   // Batch in groups of 20 to keep URL length manageable
@@ -1580,27 +1581,10 @@ async function renderModel(recId) {
       const ptsShort = shortCount(pf_[PF.pointCount]);
       // Thumbnail priority: coords JSON → SVG; else Airtable attachment → <img>;
       // else nothing (the card still shows name/category/count).
-      const coordsRaw = pf_[PF.coordsOD];
-      const polarRaw = pf_[PF.coordsOdPolar];
-      let thumbCoords = [];
-      let thumbPolar = false;
-      if (coordsRaw) {
-        try {
-          const c = JSON.parse(coordsRaw);
-          if (Array.isArray(c) && c.length > 0 && 'x' in c[0] && 'y' in c[0]) {
-            thumbCoords = c;
-          }
-        } catch(e) {}
-      }
-      if (!thumbCoords.length && polarRaw) {
-        try {
-          const p = JSON.parse(polarRaw);
-          if (Array.isArray(p) && p.length > 0 && 'r' in p[0] && 'theta' in p[0]) {
-            thumbPolar = true;
-            thumbCoords = p;
-          }
-        } catch(e) {}
-      }
+      const displayMode = sel(pf_[PF.displayPrimary]);
+      const picked = pickPrimaryCoords(pf_[PF.coordsOD], pf_[PF.coordsOdPolar], displayMode);
+      const thumbCoords = picked.coords;
+      const thumbPolar = picked.isPolar;
       const imgOD = pf_[PF.imageOD];
       const attachSrc = imgOD && imgOD.length ? (imgOD[0].thumbnails?.large?.url || imgOD[0].url) : '';
       let thumbHtml = '';
@@ -1625,6 +1609,42 @@ async function renderModel(recId) {
   }
 }
 
+// ── Coord source picker (cart vs polar) ──
+// Reads PF.displayPrimary ('cart' | 'polar' | blank) and returns the chosen
+// coord array + whether it is polar. Per CoordS28 policy, blank falls back to
+// polar-first because polar values were extracted directly from the master
+// pattern figure and are higher precision than legacy CoordS≤2-era cart
+// values that may exist as stale data in the cart fields.
+function pickPrimaryCoords(cartRaw, polarRaw, displayMode) {
+  const parseCart = (raw) => {
+    if (!raw) return null;
+    try {
+      const c = JSON.parse(raw);
+      if (Array.isArray(c) && c.length > 0 && 'x' in c[0] && 'y' in c[0]) return c;
+    } catch (e) {}
+    return null;
+  };
+  const parsePolar = (raw) => {
+    if (!raw) return null;
+    try {
+      const p = JSON.parse(raw);
+      if (Array.isArray(p) && p.length > 0 && 'r' in p[0] && 'theta' in p[0]) return p;
+    } catch (e) {}
+    return null;
+  };
+  const cart = parseCart(cartRaw);
+  const polar = parsePolar(polarRaw);
+  if (displayMode === 'cart') {
+    if (cart) return { coords: cart, isPolar: false };
+    if (polar) return { coords: polar, isPolar: true };
+  } else {
+    // 'polar' or blank → polar-first (safer default)
+    if (polar) return { coords: polar, isPolar: true };
+    if (cart) return { coords: cart, isPolar: false };
+  }
+  return { coords: [], isPolar: false };
+}
+
 // ── SVG pattern renderer (from Airtable coord JSON) ──
 // Renders eccentricity rings + axes + test points as inline SVG.
 // Accepts cartesian [{x,y,type?,count?}] or polar [{r,theta,type?,count?}].
@@ -1639,7 +1659,20 @@ function renderPatternSVG(coords, opts) {
   // Convert coords to (x,y) in visual-field convention (y up = positive)
   const pts = (coords || []).map(c => {
     let x, y;
-    if (isPolar) {
+    // BS marker sentinel: a polar entry with type='blind_spot', theta=180,
+    // and missing/null/non-finite r encodes "BS marker present, position
+    // not calibrated". Substitute the canonical OD BS position (15° temporal,
+    // 4° below horizontal midline) so the marker still draws. Mirror handles
+    // OS automatically. Note: c.r == null catches both null and undefined
+    // (== with null tests both); Number.isFinite filters out NaN from string
+    // values like "?".
+    const isBsSentinel = c.type === 'blind_spot' && isPolar &&
+      Number(c.theta) === 180 &&
+      (c.r == null || !Number.isFinite(Number(c.r)));
+    if (isBsSentinel) {
+      x = 15;
+      y = -4;
+    } else if (isPolar) {
       const rad = (Number(c.theta) * Math.PI) / 180;
       x = Number(c.r) * Math.cos(rad);
       y = Number(c.r) * Math.sin(rad);
@@ -1801,52 +1834,19 @@ async function renderPattern(pfId, modelId) {
   const imgOD = pf[PF.imageOD];
   const imgOS = pf[PF.imageOS];
   const osMirror = pf[PF.osMirror];
-  const coordsRaw = pf[PF.coordsOD];
-  const coordsPolarRaw = pf[PF.coordsOdPolar];
+  const displayMode = sel(pf[PF.displayPrimary]);
 
-  // Parse coordinates — prefer cartesian (canonical per L109), fall back to polar
-  let coords = [];
-  let isPolar = false;
-  if (coordsRaw) {
-    try {
-      const cart = JSON.parse(coordsRaw);
-      if (Array.isArray(cart) && cart.length > 0 && 'x' in cart[0] && 'y' in cart[0]) {
-        coords = cart;
-      }
-    } catch(e) {}
-  }
-  if (!coords.length && coordsPolarRaw) {
-    try {
-      const polar = JSON.parse(coordsPolarRaw);
-      if (Array.isArray(polar) && polar.length > 0 && 'r' in polar[0] && 'theta' in polar[0]) {
-        isPolar = true;
-        coords = polar;
-      }
-    } catch(e) {}
-  }
+  // Parse coordinates — prefer the source flagged by Display Primary
+  // (CoordS28 per-record policy; falls back to polar-first when blank)
+  const picked = pickPrimaryCoords(pf[PF.coordsOD], pf[PF.coordsOdPolar], displayMode);
+  const coords = picked.coords;
+  const isPolar = picked.isPolar;
 
   // ── Parse OS coordinates (explicit coordsOS > mirror of OD > attachment) ──
-  const coordsOsRaw = pf[PF.coordsOS];
-  const coordsOsPolarRaw = pf[PF.coordsOsPolar];
-  let coordsOs = [];
-  let osIsPolar = false;
-  if (coordsOsRaw) {
-    try {
-      const cart = JSON.parse(coordsOsRaw);
-      if (Array.isArray(cart) && cart.length > 0 && 'x' in cart[0] && 'y' in cart[0]) {
-        coordsOs = cart;
-      }
-    } catch(e) {}
-  }
-  if (!coordsOs.length && coordsOsPolarRaw) {
-    try {
-      const p = JSON.parse(coordsOsPolarRaw);
-      if (Array.isArray(p) && p.length > 0 && 'r' in p[0] && 'theta' in p[0]) {
-        osIsPolar = true;
-        coordsOs = p;
-      }
-    } catch(e) {}
-  }
+  // Same Display Primary policy applies to OS fields.
+  const pickedOs = pickPrimaryCoords(pf[PF.coordsOS], pf[PF.coordsOsPolar], displayMode);
+  const coordsOs = pickedOs.coords;
+  const osIsPolar = pickedOs.isPolar;
 
   // ── Binocular (OU) detection ──
   // Estermann Binocular and similar tests are measured with both eyes open,
@@ -1862,7 +1862,7 @@ async function renderPattern(pfId, modelId) {
 
   // ── OS panel decision ──
   // We render a separate OS panel only when the user has supplied explicit
-  // OS coordinates (coordsOsRaw / coordsOsPolarRaw) OR an explicit OS image
+  // OS coordinates (PF.coordsOS / PF.coordsOsPolar) OR an explicit OS image
   // attachment. For binocular tests, for osMirror=true cases (symmetric OR
   // asymmetric), and for patterns without any OS data, we render only the
   // OD panel and adjust the heading label.
