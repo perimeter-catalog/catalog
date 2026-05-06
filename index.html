@@ -1584,7 +1584,15 @@ async function renderModel(recId) {
       const polarRaw = pf_[PF.coordsOdPolar];
       let thumbCoords = [];
       let thumbPolar = false;
-      if (polarRaw) {
+      if (coordsRaw) {
+        try {
+          const c = JSON.parse(coordsRaw);
+          if (Array.isArray(c) && c.length > 0 && 'x' in c[0] && 'y' in c[0]) {
+            thumbCoords = c;
+          }
+        } catch(e) {}
+      }
+      if (!thumbCoords.length && polarRaw) {
         try {
           const p = JSON.parse(polarRaw);
           if (Array.isArray(p) && p.length > 0 && 'r' in p[0] && 'theta' in p[0]) {
@@ -1592,9 +1600,6 @@ async function renderModel(recId) {
             thumbCoords = p;
           }
         } catch(e) {}
-      }
-      if (!thumbPolar && coordsRaw) {
-        try { thumbCoords = JSON.parse(coordsRaw); } catch(e) {}
       }
       const imgOD = pf_[PF.imageOD];
       const attachSrc = imgOD && imgOD.length ? (imgOD[0].thumbnails?.large?.url || imgOD[0].url) : '';
@@ -1799,10 +1804,18 @@ async function renderPattern(pfId, modelId) {
   const coordsRaw = pf[PF.coordsOD];
   const coordsPolarRaw = pf[PF.coordsOdPolar];
 
-  // Parse coordinates — prefer polar if available (for radial patterns)
+  // Parse coordinates — prefer cartesian (canonical per L109), fall back to polar
   let coords = [];
   let isPolar = false;
-  if (coordsPolarRaw) {
+  if (coordsRaw) {
+    try {
+      const cart = JSON.parse(coordsRaw);
+      if (Array.isArray(cart) && cart.length > 0 && 'x' in cart[0] && 'y' in cart[0]) {
+        coords = cart;
+      }
+    } catch(e) {}
+  }
+  if (!coords.length && coordsPolarRaw) {
     try {
       const polar = JSON.parse(coordsPolarRaw);
       if (Array.isArray(polar) && polar.length > 0 && 'r' in polar[0] && 'theta' in polar[0]) {
@@ -1811,16 +1824,21 @@ async function renderPattern(pfId, modelId) {
       }
     } catch(e) {}
   }
-  if (!isPolar && coordsRaw) {
-    try { coords = JSON.parse(coordsRaw); } catch(e) {}
-  }
 
   // ── Parse OS coordinates (explicit coordsOS > mirror of OD > attachment) ──
   const coordsOsRaw = pf[PF.coordsOS];
   const coordsOsPolarRaw = pf[PF.coordsOsPolar];
   let coordsOs = [];
   let osIsPolar = false;
-  if (coordsOsPolarRaw) {
+  if (coordsOsRaw) {
+    try {
+      const cart = JSON.parse(coordsOsRaw);
+      if (Array.isArray(cart) && cart.length > 0 && 'x' in cart[0] && 'y' in cart[0]) {
+        coordsOs = cart;
+      }
+    } catch(e) {}
+  }
+  if (!coordsOs.length && coordsOsPolarRaw) {
     try {
       const p = JSON.parse(coordsOsPolarRaw);
       if (Array.isArray(p) && p.length > 0 && 'r' in p[0] && 'theta' in p[0]) {
@@ -1828,9 +1846,6 @@ async function renderPattern(pfId, modelId) {
         coordsOs = p;
       }
     } catch(e) {}
-  }
-  if (!osIsPolar && coordsOsRaw) {
-    try { coordsOs = JSON.parse(coordsOsRaw); } catch(e) {}
   }
 
   // ── Binocular (OU) detection ──
