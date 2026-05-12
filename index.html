@@ -1745,7 +1745,12 @@ function renderPatternSVG(coords, opts) {
     // a single thick blob.
     const count = Math.max(1, Number(p.count) || 1);
     if (count === 1) {
-      return `<circle cx="${cx}" cy="${cy}" r="${pointR}" fill="#1a2332"/>`;
+      // Optional per-point size multiplier via p.r (default 1.0).
+      // Used by patterns like Octopus P15 Blind Spot where the fine 1°
+      // grid points should render visibly smaller than the coarse 3° grid.
+      const rMult = Number(p.r) > 0 ? Number(p.r) : 1;
+      const effectiveR = (Number(pointR) * rMult).toFixed(2);
+      return `<circle cx="${cx}" cy="${cy}" r="${effectiveR}" fill="#1a2332"/>`;
     }
     const pr = Number(pointR);
     const innerR = (pr * 0.55).toFixed(2);
