@@ -1268,7 +1268,16 @@ function renderProduct(productName) {
   ]);
 
   const countries = collectCountries(records);
-  const mfrs = [...new Set(records.map(r => g(r, F.manufacturer)).filter(Boolean))];
+  // Collect ALL manufacturers across records (records may span multiple companies
+  // over a product's lifetime, e.g., Octopus: Interzeag → Haag-Streit AG).
+  // Also handle multi-line manufacturer fields within a single record.
+  // Records are pre-sorted by SortOrder asc, so first appearance = earliest.
+  const mfrs = [...new Set(
+    records.flatMap(r => {
+      const m = g(r, F.manufacturer);
+      return m ? m.split('\n').map(s => s.trim()).filter(Boolean) : [];
+    })
+  )];
 
   const headerFlagsHtml = countries
     .filter(c => c.flag)
@@ -1284,7 +1293,7 @@ function renderProduct(productName) {
       </div>
       <div class="detail-sub">
         ${countryNamesText ? `<span>${esc(countryNamesText)}</span>` : ''}
-        ${mfrs.length ? `<span>${esc(mfrs[0])}</span>` : ''}
+        ${mfrs.length ? `<span>${esc(mfrs.join(', '))}</span>` : ''}
         <span>${records.length} model${records.length>1?'s':''}</span>
       </div>
     </div>
