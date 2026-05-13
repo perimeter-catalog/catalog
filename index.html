@@ -1042,7 +1042,7 @@ function productCardHtml(p) {
   for (const r of p.records) {
     const imgs = r.fields?.[F.image];
     if (imgs && imgs.length) {
-      const src = imgs[0].thumbnails?.small?.url || imgs[0].url;
+      const src = imgs[0].thumbnails?.large?.url || imgs[0].url;
       if (src) thumbs.push({ src, name: g(r, F.model) || '' });
     }
   }
