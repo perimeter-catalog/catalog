@@ -1706,7 +1706,13 @@ function renderPatternSVG(coords, opts) {
       y = Number(c.y);
     }
     if (mirror) x = -x;
-    return { x, y, type: c.type, count: c.count, r: c.r };
+    // Only propagate c.r as a per-point size multiplier when the source is
+    // cartesian. For polar input, c.r is the geometric eccentricity (degrees)
+    // and has already been consumed by the x/y conversion above; if it leaks
+    // through, the count=1 render branch would treat e.g. r=30 as a 30×
+    // size multiplier, making points engulf the canvas.
+    const sizeR = isPolar ? undefined : c.r;
+    return { x, y, type: c.type, count: c.count, r: sizeR };
   }).filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
 
   // Auto-fit extent: round maxR up to the next 10° boundary, then add a
