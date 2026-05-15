@@ -418,9 +418,9 @@ a:hover { text-decoration: underline; }
 .pswp__caption:empty { display: none; }
 
 /* ── Image gallery thumbnails ── */
-/* Responsive grid: 2 columns on mobile, 3 on tablet, 4 on desktop.
-   Each grid cell is the same size regardless of image aspect ratio,
-   so the layout stays neat (no orphan single-thumb rows on mobile). */
+/* Responsive grid: 2 columns on mobile, 3 columns on tablet & desktop.
+   (Was 4-col on >=900px — dropped per Chota request so thumbs render
+   ~33% larger on initial gallery view. Lightbox sizing unchanged.) */
 .image-gallery {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -428,9 +428,6 @@ a:hover { text-decoration: underline; }
 }
 @media (min-width: 600px) {
   .image-gallery { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-}
-@media (min-width: 900px) {
-  .image-gallery { grid-template-columns: repeat(4, 1fr); gap: 10px; }
 }
 .image-gallery figure {
   margin: 0;
