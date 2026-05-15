@@ -224,7 +224,7 @@ a:hover { text-decoration: underline; }
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 14px 18px;
   cursor: pointer; transition: all .15s;
-  display: grid; grid-template-columns: auto 80px 1fr auto; gap: 14px; align-items: center;
+  display: grid; grid-template-columns: auto 112px 1fr auto; gap: 14px; align-items: center;
 }
 /* Mobile: drop the year onto a 2nd row beneath the name, so the
    name+manufacturer column gets full remaining width instead of being
@@ -232,7 +232,7 @@ a:hover { text-decoration: underline; }
    "ca. 1977-1978 (📌 replaced Mod"). PC layout unchanged. */
 @media (max-width: 599px) {
   .model-row {
-    grid-template-columns: auto 80px 1fr;
+    grid-template-columns: auto 112px 1fr;
     grid-template-areas:
       "so thumb name"
       "so thumb year";
@@ -249,8 +249,8 @@ a:hover { text-decoration: underline; }
 }
 .model-row:hover { border-color: var(--accent); background: var(--bg3); }
 .model-so { font-family: var(--mono); font-size: 12px; color: var(--text3); min-width: 32px; text-align: right; }
-.model-thumb { width: 80px; height: 60px; object-fit: contain; border-radius: 4px; background: var(--bg); display: block; }
-.model-thumb-empty { width: 80px; height: 60px; border-radius: 4px; background: var(--bg3); display: flex; align-items: center; justify-content: center; color: var(--text3); }
+.model-thumb { width: 112px; height: 84px; object-fit: contain; border-radius: 4px; background: var(--bg); display: block; }
+.model-thumb-empty { width: 112px; height: 84px; border-radius: 4px; background: var(--bg3); display: flex; align-items: center; justify-content: center; color: var(--text3); }
 .model-thumb-empty svg { width: 100%; height: 100%; padding: 8px; box-sizing: border-box; }
 .model-name { font-size: 14px; font-weight: 500; }
 .model-year { font-size: 12px; color: var(--text3); font-family: var(--mono); }
@@ -263,11 +263,11 @@ a:hover { text-decoration: underline; }
 }
 .model-row-overview:hover { background: linear-gradient(90deg, var(--accent-soft) 0%, var(--bg3) 30%); }
 .model-thumb-overview {
-  width: 80px; height: 60px; border-radius: 4px;
+  width: 112px; height: 84px; border-radius: 4px;
   background: var(--bg3);
   display: flex; align-items: center; justify-content: center;
 }
-.model-thumb-overview svg { width: 64px; height: 46px; }
+.model-thumb-overview svg { width: 90px; height: 65px; }
 .model-thumb-overview .ovw-back  { fill: var(--accent); opacity: .25; }
 .model-thumb-overview .ovw-mid   { fill: var(--accent); opacity: .55; }
 .model-thumb-overview .ovw-front { fill: var(--accent2); }
@@ -1327,8 +1327,8 @@ function renderProduct(productName) {
     const tp = sel(r.fields?.[F.type]);
     const imgs = r.fields?.[F.image];
     // Use 'large' thumbnail (~1024px max) instead of 'small' (~36px max) because
-    // the model-row thumb is now rendered at 80x60 CSS px (= 160x120 on Retina),
-    // which makes the 36px small thumb 2-4x stretched and blurry.
+    // the model-row thumb is now rendered at 112x84 CSS px (= 224x168 on Retina),
+    // which makes the 36px small thumb 3-6x stretched and blurry.
     const thumbSrc = imgs && imgs.length ? (imgs[0].thumbnails?.large?.url || imgs[0].url) : '';
     const isOverview = !!r.fields?.[F.familyOverview];
     // Intra-group sequential numbering: count only real model rows, not overview rows.
