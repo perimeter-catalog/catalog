@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palette Preview — Automated Perimeter Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: #1f2329; color: #c8ccd2; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  padding: 24px 16px 64px;
+  line-height: 1.55;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.page-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #fff; }
+.page-desc { font-size: 13px; color: #8a929e; margin-bottom: 28px; line-height: 1.5; }
+.page-desc code { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 5px; background: #2a2f37; border-radius: 3px; color: #c0c8d4; }
+
+/* Each palette block is self-contained: scoped CSS variables, no leak. */
+.palette {
+  margin-bottom: 28px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #2e343c;
+}
+.palette-label {
+  background: #2a2f37;
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .03em;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap;
+}
+.palette-label .swatches { display: inline-flex; gap: 4px; }
+.palette-label .swatch { width: 18px; height: 18px; border-radius: 3px; border: 1px solid rgba(255,255,255,.15); }
+.palette-label .tagline { font-weight: 400; opacity: .65; font-size: 11px; }
+
+/* The mockup itself takes its colors from the parent palette block's vars. */
+.mockup {
+  background: var(--bg);
+  color: var(--text);
+  padding: 0;
+}
+.mock-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap;
+}
+.mock-brand { font-size: 16px; font-weight: 700; color: var(--text); }
+.mock-meta { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.mock-body { padding: 18px 20px; }
+.mock-section-title { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; letter-spacing: .08em; margin-bottom: 8px; }
+.mock-product-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px 8px;
+  margin-bottom: 14px;
+  transition: border-color .15s;
+}
+.mock-product-card:hover { border-color: var(--accent); }
+.mock-product-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.mock-product-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.mock-product-year { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.mock-product-sub { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.mock-thumbs { display: flex; gap: 6px; padding-top: 4px; }
+.mock-thumb {
+  width: 56px; height: 56px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+}
+.mock-model-row {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: 28px 80px 1fr auto;
+  gap: 12px; align-items: center;
+  transition: all .15s;
+}
+.mock-model-row:hover { border-color: var(--accent); background: var(--bg3); }
+.mock-model-so { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text3); text-align: right; }
+.mock-model-thumb {
+  width: 80px; height: 56px;
+  background: var(--bg3);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+}
+.mock-model-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.mock-model-mfr { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.mock-model-year { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.mock-section-head {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: .03em;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.mock-section-head .chev { float: right; color: var(--accent); }
+.mock-section-body {
+  padding: 6px 14px 4px;
+  font-size: 13px;
+  color: var(--text2);
+}
+.mock-buttons { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.mock-btn-primary {
+  background: var(--accent);
+  color: var(--accent-on);
+  border: 1px solid var(--accent);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+.mock-btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border2);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+.mock-link { color: var(--accent); text-decoration: underline; font-size: 13px; }
+.mock-tag {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: .03em;
+}
+.var-list {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 10px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.7;
+}
+.var-list code { color: var(--text2); }
+
+/* ───── Palette A: Warm Cream + Burgundy ───── */
+.palette-a {
+  --bg: #f7f3eb;
+  --bg2: #fbf8f1;
+  --bg3: #ede7d8;
+  --bg4: #e3dac8;
+  --border: #ddd2bd;
+  --border2: #c8baa1;
+  --text: #2a2520;
+  --text2: #5a4f44;
+  --text3: #8b7d6b;
+  --accent: #8a3a4a;
+  --accent2: #6b2935;
+  --accent-soft: rgba(138,58,74,.08);
+  --accent-on: #fff;
+}
+/* ───── Palette B: Warm Cream + Forest Green ───── */
+.palette-b {
+  --bg: #f6f4ec;
+  --bg2: #fbf9f2;
+  --bg3: #ebe7d8;
+  --bg4: #e1dcc9;
+  --border: #d8d2be;
+  --border2: #c2baa1;
+  --text: #1f2a23;
+  --text2: #4d574c;
+  --text3: #847e6c;
+  --accent: #4a7a5a;
+  --accent2: #355c43;
+  --accent-soft: rgba(74,122,90,.08);
+  --accent-on: #fff;
+}
+/* ───── Palette C: Warm Gray + Copper/Amber ───── */
+.palette-c {
+  --bg: #f4f2ed;
+  --bg2: #faf8f3;
+  --bg3: #e9e5dc;
+  --bg4: #ddd7ca;
+  --border: #d6cfbf;
+  --border2: #bcb3a0;
+  --text: #232120;
+  --text2: #524d45;
+  --text3: #8a8273;
+  --accent: #b07020;
+  --accent2: #8d5616;
+  --accent-soft: rgba(176,112,32,.08);
+  --accent-on: #fff;
+}
+/* ───── Palette D: Current cool blue + warm amber accent2 ───── */
+.palette-d {
+  --bg: #eef1f5;
+  --bg2: #f6f8fb;
+  --bg3: #e4e9f0;
+  --bg4: #dce2eb;
+  --border: #d0d7e2;
+  --border2: #b8c2d0;
+  --text: #1a2332;
+  --text2: #4a5568;
+  --text3: #8694a7;
+  --accent: #3a6fa8;
+  --accent2: #b87334;
+  --accent-soft: rgba(58,111,168,.08);
+  --accent-on: #fff;
+}
+/* In D, swap primary CTA to amber so the warmth actually shows */
+.palette-d .mock-btn-primary { background: var(--accent2); border-color: var(--accent2); }
+.palette-d .mock-tag { background: rgba(184,115,52,.1); color: var(--accent2); }
+
+/* ───── Palette E: Current (for reference) ───── */
+.palette-e {
+  --bg: #eef1f5;
+  --bg2: #f6f8fb;
+  --bg3: #e4e9f0;
+  --bg4: #dce2eb;
+  --border: #d0d7e2;
+  --border2: #b8c2d0;
+  --text: #1a2332;
+  --text2: #4a5568;
+  --text3: #8694a7;
+  --accent: #3a6fa8;
+  --accent2: #2d5a8a;
+  --accent-soft: rgba(58,111,168,.07);
+  --accent-on: #fff;
+}
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Palette Preview</h1>
+<p class="page-desc">
+  perimeter-catalog の配色案を 5 種比較。各カードは Landing カード / Manufacturer 行 / Section header / Button / Tag を 1 セットで含み、本番のレイアウトに即した <code>--bg</code>/<code>--text</code>/<code>--accent</code> 等の変数を適用しています。Palette E は現状参考。
+</p>
+
+<!-- ───── E: Current (reference) ───── -->
+<div class="palette palette-e">
+  <div class="palette-label">
+    <span>Palette E — Current (参考)</span>
+    <span class="tagline">cool gray + muted blue</span>
+    <span class="swatches">
+      <span class="swatch" style="background:#eef1f5"></span>
+      <span class="swatch" style="background:#1a2332"></span>
+      <span class="swatch" style="background:#3a6fa8"></span>
+      <span class="swatch" style="background:#2d5a8a"></span>
+    </span>
+  </div>
+  <div class="mockup">
+    <div class="mock-header">
+      <div class="mock-brand">Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-product-card">
+        <div class="mock-product-top">
+          <div class="mock-product-name">Octopus 900</div>
+          <div class="mock-product-year">2005–2020</div>
+        </div>
+        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-thumbs">
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+        </div>
+      </div>
+
+      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-model-row">
+        <div class="mock-model-so">1</div>
+        <div class="mock-model-thumb">img</div>
+        <div>
+          <div class="mock-model-name">HFA Model 610</div>
+          <div class="mock-model-mfr">Humphrey Instruments Inc · Bowl</div>
+        </div>
+        <div class="mock-model-year">1984</div>
+      </div>
+
+      <div class="mock-section-title">SECTION HEADER (open)</div>
+      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-body">
+        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+      </div>
+
+      <div class="mock-buttons">
+        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-secondary">Reset</button>
+        <span class="mock-tag">SO 91</span>
+      </div>
+    </div>
+    <div class="var-list">
+      bg <code>#eef1f5</code> · bg2 <code>#f6f8fb</code> · text <code>#1a2332</code> · accent <code>#3a6fa8</code>
+    </div>
+  </div>
+</div>
+
+<!-- ───── A: Warm Cream + Burgundy ───── -->
+<div class="palette palette-a">
+  <div class="palette-label">
+    <span>Palette A — Warm cream + Burgundy</span>
+    <span class="tagline">古典紙面・図書館</span>
+    <span class="swatches">
+      <span class="swatch" style="background:#f7f3eb"></span>
+      <span class="swatch" style="background:#2a2520"></span>
+      <span class="swatch" style="background:#8a3a4a"></span>
+      <span class="swatch" style="background:#6b2935"></span>
+    </span>
+  </div>
+  <div class="mockup">
+    <div class="mock-header">
+      <div class="mock-brand">Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-product-card">
+        <div class="mock-product-top">
+          <div class="mock-product-name">Octopus 900</div>
+          <div class="mock-product-year">2005–2020</div>
+        </div>
+        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-thumbs">
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+        </div>
+      </div>
+
+      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-model-row">
+        <div class="mock-model-so">1</div>
+        <div class="mock-model-thumb">img</div>
+        <div>
+          <div class="mock-model-name">HFA Model 610</div>
+          <div class="mock-model-mfr">Humphrey Instruments Inc · Bowl</div>
+        </div>
+        <div class="mock-model-year">1984</div>
+      </div>
+
+      <div class="mock-section-title">SECTION HEADER (open)</div>
+      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-body">
+        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+      </div>
+
+      <div class="mock-buttons">
+        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-secondary">Reset</button>
+        <span class="mock-tag">SO 91</span>
+      </div>
+    </div>
+    <div class="var-list">
+      bg <code>#f7f3eb</code> · bg2 <code>#fbf8f1</code> · text <code>#2a2520</code> · accent <code>#8a3a4a</code> (burgundy)
+    </div>
+  </div>
+</div>
+
+<!-- ───── B: Warm Cream + Forest Green ───── -->
+<div class="palette palette-b">
+  <div class="palette-label">
+    <span>Palette B — Warm cream + Forest green</span>
+    <span class="tagline">植物学誌・サイエンス</span>
+    <span class="swatches">
+      <span class="swatch" style="background:#f6f4ec"></span>
+      <span class="swatch" style="background:#1f2a23"></span>
+      <span class="swatch" style="background:#4a7a5a"></span>
+      <span class="swatch" style="background:#355c43"></span>
+    </span>
+  </div>
+  <div class="mockup">
+    <div class="mock-header">
+      <div class="mock-brand">Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-product-card">
+        <div class="mock-product-top">
+          <div class="mock-product-name">Octopus 900</div>
+          <div class="mock-product-year">2005–2020</div>
+        </div>
+        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-thumbs">
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+        </div>
+      </div>
+
+      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-model-row">
+        <div class="mock-model-so">1</div>
+        <div class="mock-model-thumb">img</div>
+        <div>
+          <div class="mock-model-name">HFA Model 610</div>
+          <div class="mock-model-mfr">Humphrey Instruments Inc · Bowl</div>
+        </div>
+        <div class="mock-model-year">1984</div>
+      </div>
+
+      <div class="mock-section-title">SECTION HEADER (open)</div>
+      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-body">
+        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+      </div>
+
+      <div class="mock-buttons">
+        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-secondary">Reset</button>
+        <span class="mock-tag">SO 91</span>
+      </div>
+    </div>
+    <div class="var-list">
+      bg <code>#f6f4ec</code> · bg2 <code>#fbf9f2</code> · text <code>#1f2a23</code> · accent <code>#4a7a5a</code> (forest)
+    </div>
+  </div>
+</div>
+
+<!-- ───── C: Warm Gray + Copper/Amber ───── -->
+<div class="palette palette-c">
+  <div class="palette-label">
+    <span>Palette C — Warm gray + Copper/Amber</span>
+    <span class="tagline">現代エディトリアル</span>
+    <span class="swatches">
+      <span class="swatch" style="background:#f4f2ed"></span>
+      <span class="swatch" style="background:#232120"></span>
+      <span class="swatch" style="background:#b07020"></span>
+      <span class="swatch" style="background:#8d5616"></span>
+    </span>
+  </div>
+  <div class="mockup">
+    <div class="mock-header">
+      <div class="mock-brand">Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-product-card">
+        <div class="mock-product-top">
+          <div class="mock-product-name">Octopus 900</div>
+          <div class="mock-product-year">2005–2020</div>
+        </div>
+        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-thumbs">
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+        </div>
+      </div>
+
+      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-model-row">
+        <div class="mock-model-so">1</div>
+        <div class="mock-model-thumb">img</div>
+        <div>
+          <div class="mock-model-name">HFA Model 610</div>
+          <div class="mock-model-mfr">Humphrey Instruments Inc · Bowl</div>
+        </div>
+        <div class="mock-model-year">1984</div>
+      </div>
+
+      <div class="mock-section-title">SECTION HEADER (open)</div>
+      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-body">
+        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+      </div>
+
+      <div class="mock-buttons">
+        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-secondary">Reset</button>
+        <span class="mock-tag">SO 91</span>
+      </div>
+    </div>
+    <div class="var-list">
+      bg <code>#f4f2ed</code> · bg2 <code>#faf8f3</code> · text <code>#232120</code> · accent <code>#b07020</code> (copper)
+    </div>
+  </div>
+</div>
+
+<!-- ───── D: Current blue + warm accent2 ───── -->
+<div class="palette palette-d">
+  <div class="palette-label">
+    <span>Palette D — Current blue + warm amber accent2</span>
+    <span class="tagline">現状に暖色 accent 追加 (最小変更)</span>
+    <span class="swatches">
+      <span class="swatch" style="background:#eef1f5"></span>
+      <span class="swatch" style="background:#1a2332"></span>
+      <span class="swatch" style="background:#3a6fa8"></span>
+      <span class="swatch" style="background:#b87334"></span>
+    </span>
+  </div>
+  <div class="mockup">
+    <div class="mock-header">
+      <div class="mock-brand">Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+    </div>
+    <div class="mock-body">
+      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-product-card">
+        <div class="mock-product-top">
+          <div class="mock-product-name">Octopus 900</div>
+          <div class="mock-product-year">2005–2020</div>
+        </div>
+        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-thumbs">
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div>
+        </div>
+      </div>
+
+      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-model-row">
+        <div class="mock-model-so">1</div>
+        <div class="mock-model-thumb">img</div>
+        <div>
+          <div class="mock-model-name">HFA Model 610</div>
+          <div class="mock-model-mfr">Humphrey Instruments Inc · Bowl</div>
+        </div>
+        <div class="mock-model-year">1984</div>
+      </div>
+
+      <div class="mock-section-title">SECTION HEADER (open)</div>
+      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-body">
+        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+      </div>
+
+      <div class="mock-buttons">
+        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-secondary">Reset</button>
+        <span class="mock-tag">SO 91</span>
+      </div>
+    </div>
+    <div class="var-list">
+      bg <code>#eef1f5</code> · text <code>#1a2332</code> · accent <code>#3a6fa8</code> (blue) · accent2 <code>#b87334</code> (amber CTA)
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
