@@ -1136,11 +1136,14 @@ function renderProducts() {
   const metaEl = document.getElementById('headerMeta');
   metaEl.textContent = `${allRecords.length} models · ${productList.length} products`;
   // Append last-updated timestamp from Airtable Last Modified fields.
-  // Computes max across Main + PF tables to reflect any DB edit (not only
-  // catalog code commits). For Main, uses the already-loaded allRecords;
-  // for PF, fetches just the single most-recently-modified record (one round
-  // trip, sorted by Last Modified desc, pageSize=1). If either source fails
-  // we silently leave the original counts-only header in place.
+  // Aggregates max across Main + PF + LT + jx + PN tables to reflect ANY DB
+  // edit, not just edits to Main records themselves. For Main, uses the
+  // already-loaded allRecords; for the other four, fetches the single
+  // most-recently-modified record per table (one round trip each, sorted by
+  // Last Modified desc, pageSize=1, all in parallel). If any source fails it
+  // is silently treated as zero.
+  // LT/jx/PN Last Modified are formula fields (LAST_MODIFIED_TIME()) added
+  // 2026-05-16 to ensure Main lane edits to LT/jx/PN propagate to the stamp.
   (async () => {
     let mainMax = 0;
     for (const r of allRecords) {
@@ -1149,24 +1152,29 @@ function renderProducts() {
       const t = new Date(lm).getTime();
       if (Number.isFinite(t) && t > mainMax) mainMax = t;
     }
-    let pfMax = 0;
-    try {
-      const pfUrl = `https://api.airtable.com/v0/${BASE_ID}/${PF_TABLE}`
-        + `?pageSize=1&returnFieldsByFieldId=true`
-        + `&fields%5B%5D=${PF.lastModified}`
-        + `&sort%5B0%5D%5Bfield%5D=${PF.lastModified}`
-        + `&sort%5B0%5D%5Bdirection%5D=desc`;
-      const res = await fetch(pfUrl, { headers: { Authorization: `Bearer ${TOKEN}` } });
-      if (res.ok) {
+    const fetchLatestModified = async (tableId, fieldId) => {
+      try {
+        const url = `https://api.airtable.com/v0/${BASE_ID}/${tableId}`
+          + `?pageSize=1&returnFieldsByFieldId=true`
+          + `&fields%5B%5D=${fieldId}`
+          + `&sort%5B0%5D%5Bfield%5D=${fieldId}`
+          + `&sort%5B0%5D%5Bdirection%5D=desc`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+        if (!res.ok) return 0;
         const data = await res.json();
-        const lm = data.records?.[0]?.fields?.[PF.lastModified];
-        if (lm) {
-          const t = new Date(lm).getTime();
-          if (Number.isFinite(t)) pfMax = t;
-        }
-      }
-    } catch(e) { /* silent */ }
-    const max = Math.max(mainMax, pfMax);
+        const lm = data.records?.[0]?.fields?.[fieldId];
+        if (!lm) return 0;
+        const t = new Date(lm).getTime();
+        return Number.isFinite(t) ? t : 0;
+      } catch(e) { return 0; }
+    };
+    const [pfMax, ltMax, jxMax, pnMax] = await Promise.all([
+      fetchLatestModified(PF_TABLE,            'fld55IMcyCDSoYv7f'),
+      fetchLatestModified('tblt7Y4rElnWHyDp9', 'fld7TNUbD1xGM2zPZ'),  // LT
+      fetchLatestModified('tbl5MnlS9rNNnwNUk', 'fldkFCHhlfh2yECXc'),  // jx
+      fetchLatestModified('tblpGYSBD1qzVYe40', 'fldQFzjrdPVm4ZiHS'),  // PN
+    ]);
+    const max = Math.max(mainMax, pfMax, ltMax, jxMax, pnMax);
     if (max <= 0) return;
     const d = new Date(max);
     const pad = n => String(n).padStart(2, '0');
