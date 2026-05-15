@@ -290,6 +290,10 @@ a:hover { text-decoration: underline; }
 .detail-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
 .detail-sub { font-size: 13px; color: var(--text2); }
 .detail-sub span { margin-right: 16px; }
+.country-flag-inline {
+  width: 18px; height: auto; border-radius: 1px;
+  margin-right: 4px; vertical-align: -3px;
+}
 
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
@@ -1299,20 +1303,15 @@ function renderProduct(productName) {
     return [...map.values()];
   })();
 
-  const headerFlagsHtml = countries
-    .filter(c => c.flag)
-    .map(c => `<img src="${c.flag}" style="width:28px;border-radius:2px" alt="${esc(c.name)}" title="${esc(c.name)}">`)
-    .join('');
-  const countryNamesText = countries.map(c => c.name).join(', ');
+  const countryListHtml = countries
+    .map(c => `${c.flag ? `<img src="${c.flag}" class="country-flag-inline" alt="${esc(c.name)}">` : ''}${esc(c.name)}`)
+    .join(', ');
 
   let html = `
     <div class="detail-header">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">
-        ${headerFlagsHtml ? `<span style="display:inline-flex;align-items:center;gap:6px">${headerFlagsHtml}</span>` : ''}
-        <div class="detail-title">${esc(productName)}</div>
-      </div>
+      <div class="detail-title" style="margin-bottom:6px">${esc(productName)}</div>
       <div class="detail-sub">
-        ${countryNamesText ? `<span>${esc(countryNamesText)}</span>` : ''}
+        ${countryListHtml ? `<span>${countryListHtml}</span>` : ''}
         ${mfrs.length ? `<span>${esc(mfrs.join(', '))}</span>` : ''}
         <span>${records.length} model${records.length>1?'s':''}</span>
       </div>
