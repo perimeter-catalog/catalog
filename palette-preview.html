@@ -3,296 +3,275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Palette Preview — Automated Perimeter Archive</title>
+<title>Palette Preview v2 — Automated Perimeter Archive</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: #1f2329; color: #c8ccd2; }
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
-  padding: 24px 16px 64px;
+  padding: 32px 16px 80px;
   line-height: 1.55;
-  max-width: 980px;
+  max-width: 1040px;
   margin: 0 auto;
+  font-size: 16px;
 }
-.page-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #fff; }
-.page-desc { font-size: 13px; color: #8a929e; margin-bottom: 28px; line-height: 1.5; }
-.page-desc code { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 1px 5px; background: #2a2f37; border-radius: 3px; color: #c0c8d4; }
+.page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+.page-desc { font-size: 15px; color: #8a929e; margin-bottom: 36px; line-height: 1.55; }
+.page-desc code { font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 2px 6px; background: #2a2f37; border-radius: 3px; color: #c0c8d4; }
 
-/* Each palette block is self-contained: scoped CSS variables, no leak. */
 .palette {
-  margin-bottom: 28px;
-  border-radius: 12px;
+  margin-bottom: 36px;
+  border-radius: 14px;
   overflow: hidden;
   border: 1px solid #2e343c;
 }
 .palette-label {
   background: #2a2f37;
   color: #fff;
-  padding: 10px 16px;
-  font-size: 13px;
+  padding: 14px 20px;
+  font-size: 16px;
   font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: .03em;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
   flex-wrap: wrap;
 }
-.palette-label .swatches { display: inline-flex; gap: 4px; }
-.palette-label .swatch { width: 18px; height: 18px; border-radius: 3px; border: 1px solid rgba(255,255,255,.15); }
-.palette-label .tagline { font-weight: 400; opacity: .65; font-size: 11px; }
+.palette-label .swatches { display: inline-flex; gap: 6px; }
+.palette-label .swatch { width: 26px; height: 26px; border-radius: 4px; border: 1px solid rgba(255,255,255,.18); }
+.palette-label .tagline { font-weight: 400; opacity: .68; font-size: 14px; font-family: 'DM Sans', sans-serif; letter-spacing: 0; }
 
-/* The mockup itself takes its colors from the parent palette block's vars. */
-.mockup {
-  background: var(--bg);
-  color: var(--text);
-  padding: 0;
-}
+.mockup { background: var(--bg); color: var(--text); padding: 0; }
 .mock-header {
-  padding: 14px 20px;
+  padding: 18px 26px;
   border-bottom: 1px solid var(--border);
   background: var(--bg2);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
   flex-wrap: wrap;
 }
-.mock-brand { font-size: 16px; font-weight: 700; color: var(--text); }
-.mock-meta { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
-.mock-body { padding: 18px 20px; }
-.mock-section-title { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; letter-spacing: .08em; margin-bottom: 8px; }
+.mock-brand {
+  font-size: 22px; font-weight: 700; color: var(--text);
+  display: flex; align-items: baseline; gap: 8px;
+}
+.mock-brand .brand-mark { color: var(--accent); }
+.mock-meta { font-size: 14px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.mock-body { padding: 22px 26px 26px; }
+.mock-section-title {
+  font-size: 13px; color: var(--text3); font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .12em; margin-bottom: 10px; text-transform: uppercase;
+}
+
 .mock-product-card {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px 8px;
-  margin-bottom: 14px;
-  transition: border-color .15s;
+  border-radius: 10px;
+  padding: 16px 18px 12px;
+  margin-bottom: 18px;
+  transition: border-color .15s, transform .15s;
+  cursor: pointer;
 }
-.mock-product-card:hover { border-color: var(--accent); }
-.mock-product-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-.mock-product-name { font-size: 14px; font-weight: 600; color: var(--text); }
-.mock-product-year { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
-.mock-product-sub { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
-.mock-thumbs { display: flex; gap: 6px; padding-top: 4px; }
+.mock-product-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.mock-product-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.mock-product-name { font-size: 18px; font-weight: 700; color: var(--text); }
+.mock-product-year { font-size: 13px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.mock-product-sub { font-size: 14px; color: var(--text2); margin-bottom: 10px; }
+.mock-product-sub a { color: var(--accent); text-decoration: underline; font-weight: 500; }
+.mock-thumbs { display: flex; gap: 8px; padding-top: 6px; }
 .mock-thumb {
-  width: 56px; height: 56px;
+  width: 64px; height: 64px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
   color: var(--text3);
-  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
 }
+
 .mock-model-row {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 8px;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
   display: grid;
-  grid-template-columns: 28px 80px 1fr auto;
-  gap: 12px; align-items: center;
+  grid-template-columns: 32px 96px 1fr auto;
+  gap: 16px; align-items: center;
   transition: all .15s;
 }
 .mock-model-row:hover { border-color: var(--accent); background: var(--bg3); }
-.mock-model-so { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text3); text-align: right; }
+.mock-model-so {
+  font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  color: var(--accent); text-align: right; font-weight: 500;
+}
 .mock-model-thumb {
-  width: 80px; height: 56px;
+  width: 96px; height: 68px;
   background: var(--bg3);
-  border-radius: 4px;
+  border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
   color: var(--text3);
-  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
 }
-.mock-model-name { font-size: 14px; font-weight: 500; color: var(--text); }
-.mock-model-mfr { font-size: 12px; color: var(--text2); margin-top: 2px; }
-.mock-model-year { font-size: 12px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.mock-model-name { font-size: 17px; font-weight: 600; color: var(--text); }
+.mock-model-mfr { font-size: 14px; color: var(--text2); margin-top: 3px; }
+.mock-model-year { font-size: 14px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+
 .mock-section-head {
   background: var(--bg2);
   border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
   border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text);
   letter-spacing: .03em;
   margin-bottom: 8px;
   cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
 }
-.mock-section-head .chev { float: right; color: var(--accent); }
+.mock-section-head .chev { color: var(--accent); font-size: 18px; }
 .mock-section-body {
-  padding: 6px 14px 4px;
-  font-size: 13px;
+  padding: 10px 18px 6px;
+  font-size: 15px;
   color: var(--text2);
 }
-.mock-buttons { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.mock-section-body a { color: var(--accent); text-decoration: underline; font-weight: 500; }
+
+.mock-buttons { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
 .mock-btn-primary {
   background: var(--accent);
   color: var(--accent-on);
   border: 1px solid var(--accent);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 9px 20px;
+  border-radius: 22px;
+  font-size: 14px;
   font-family: 'JetBrains Mono', monospace;
   cursor: pointer;
+  font-weight: 500;
 }
 .mock-btn-secondary {
   background: transparent;
   color: var(--accent);
-  border: 1px solid var(--border2);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
+  border: 1.5px solid var(--accent);
+  padding: 9px 20px;
+  border-radius: 22px;
+  font-size: 14px;
   font-family: 'JetBrains Mono', monospace;
   cursor: pointer;
+  font-weight: 500;
 }
-.mock-link { color: var(--accent); text-decoration: underline; font-size: 13px; }
 .mock-tag {
   display: inline-block;
   background: var(--accent-soft);
   color: var(--accent);
-  font-size: 11px;
+  font-size: 13px;
   font-family: 'JetBrains Mono', monospace;
-  padding: 2px 8px;
-  border-radius: 10px;
-  letter-spacing: .03em;
+  padding: 4px 12px;
+  border-radius: 12px;
+  letter-spacing: .04em;
+  border: 1px solid var(--accent-soft-border);
 }
 .var-list {
   background: var(--bg2);
   border-top: 1px solid var(--border);
-  padding: 10px 20px;
+  padding: 12px 26px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text3);
   line-height: 1.7;
 }
 .var-list code { color: var(--text2); }
 
-/* ───── Palette A: Warm Cream + Burgundy ───── */
-.palette-a {
-  --bg: #f7f3eb;
-  --bg2: #fbf8f1;
-  --bg3: #ede7d8;
-  --bg4: #e3dac8;
-  --border: #ddd2bd;
-  --border2: #c8baa1;
-  --text: #2a2520;
-  --text2: #5a4f44;
-  --text3: #8b7d6b;
-  --accent: #8a3a4a;
-  --accent2: #6b2935;
-  --accent-soft: rgba(138,58,74,.08);
-  --accent-on: #fff;
+/* Palette F: Vermillion + Washi */
+.palette-f {
+  --bg: #f5efe1; --bg2: #faf5e8; --bg3: #ebe2cc; --bg4: #dfd3b6;
+  --border: #d5c8ab; --border2: #b9a988;
+  --text: #2a241d; --text2: #56463a; --text3: #897662;
+  --accent: #b04a3f; --accent2: #8b3025;
+  --accent-soft: rgba(176,74,63,.10); --accent-soft-border: rgba(176,74,63,.25); --accent-on: #fff;
 }
-/* ───── Palette B: Warm Cream + Forest Green ───── */
-.palette-b {
-  --bg: #f6f4ec;
-  --bg2: #fbf9f2;
-  --bg3: #ebe7d8;
-  --bg4: #e1dcc9;
-  --border: #d8d2be;
-  --border2: #c2baa1;
-  --text: #1f2a23;
-  --text2: #4d574c;
-  --text3: #847e6c;
-  --accent: #4a7a5a;
-  --accent2: #355c43;
-  --accent-soft: rgba(74,122,90,.08);
-  --accent-on: #fff;
+/* Palette G: Deep teal + Warm paper */
+.palette-g {
+  --bg: #f4f1e8; --bg2: #fbf8ef; --bg3: #e8e2d2; --bg4: #dcd5be;
+  --border: #d2c9b1; --border2: #b7ab8c;
+  --text: #1c2b2e; --text2: #46555a; --text3: #7d8688;
+  --accent: #18717a; --accent2: #0e555e;
+  --accent-soft: rgba(24,113,122,.10); --accent-soft-border: rgba(24,113,122,.28); --accent-on: #fff;
 }
-/* ───── Palette C: Warm Gray + Copper/Amber ───── */
-.palette-c {
-  --bg: #f4f2ed;
-  --bg2: #faf8f3;
-  --bg3: #e9e5dc;
-  --bg4: #ddd7ca;
-  --border: #d6cfbf;
-  --border2: #bcb3a0;
-  --text: #232120;
-  --text2: #524d45;
-  --text3: #8a8273;
-  --accent: #b07020;
-  --accent2: #8d5616;
-  --accent-soft: rgba(176,112,32,.08);
-  --accent-on: #fff;
+/* Palette H: Mustard ochre + Warm sand */
+.palette-h {
+  --bg: #ebe6dd; --bg2: #f1ece1; --bg3: #ddd5c5; --bg4: #cec3ac;
+  --border: #c5b89c; --border2: #a99973;
+  --text: #2c2a26; --text2: #58534a; --text3: #847d6c;
+  --accent: #b8862b; --accent2: #8e6618;
+  --accent-soft: rgba(184,134,43,.12); --accent-soft-border: rgba(184,134,43,.30); --accent-on: #fff;
 }
-/* ───── Palette D: Current cool blue + warm amber accent2 ───── */
-.palette-d {
-  --bg: #eef1f5;
-  --bg2: #f6f8fb;
-  --bg3: #e4e9f0;
-  --bg4: #dce2eb;
-  --border: #d0d7e2;
-  --border2: #b8c2d0;
-  --text: #1a2332;
-  --text2: #4a5568;
-  --text3: #8694a7;
-  --accent: #3a6fa8;
-  --accent2: #b87334;
-  --accent-soft: rgba(58,111,168,.08);
-  --accent-on: #fff;
+/* Palette I: Inky navy + Cream */
+.palette-i {
+  --bg: #f7f5f0; --bg2: #fcfaf4; --bg3: #ece8de; --bg4: #e0dcce;
+  --border: #d4cebe; --border2: #b7afa0;
+  --text: #1a2845; --text2: #404a66; --text3: #7a8195;
+  --accent: #1f4070; --accent2: #142a4e;
+  --accent-soft: rgba(31,64,112,.09); --accent-soft-border: rgba(31,64,112,.25); --accent-on: #fff;
 }
-/* In D, swap primary CTA to amber so the warmth actually shows */
-.palette-d .mock-btn-primary { background: var(--accent2); border-color: var(--accent2); }
-.palette-d .mock-tag { background: rgba(184,115,52,.1); color: var(--accent2); }
-
-/* ───── Palette E: Current (for reference) ───── */
+/* Palette J: Dark mode */
+.palette-j {
+  --bg: #1a1d22; --bg2: #21252b; --bg3: #2b3038; --bg4: #353c45;
+  --border: #3a4049; --border2: #4e5662;
+  --text: #e8e5dd; --text2: #b2afa6; --text3: #797670;
+  --accent: #d4a657; --accent2: #b08840;
+  --accent-soft: rgba(212,166,87,.14); --accent-soft-border: rgba(212,166,87,.32); --accent-on: #1a1d22;
+}
+/* Palette E: Current (reference) */
 .palette-e {
-  --bg: #eef1f5;
-  --bg2: #f6f8fb;
-  --bg3: #e4e9f0;
-  --bg4: #dce2eb;
-  --border: #d0d7e2;
-  --border2: #b8c2d0;
-  --text: #1a2332;
-  --text2: #4a5568;
-  --text3: #8694a7;
-  --accent: #3a6fa8;
-  --accent2: #2d5a8a;
-  --accent-soft: rgba(58,111,168,.07);
-  --accent-on: #fff;
+  --bg: #eef1f5; --bg2: #f6f8fb; --bg3: #e4e9f0; --bg4: #dce2eb;
+  --border: #d0d7e2; --border2: #b8c2d0;
+  --text: #1a2332; --text2: #4a5568; --text3: #8694a7;
+  --accent: #3a6fa8; --accent2: #2d5a8a;
+  --accent-soft: rgba(58,111,168,.08); --accent-soft-border: rgba(58,111,168,.25); --accent-on: #fff;
 }
 </style>
 </head>
 <body>
 
-<h1 class="page-title">Palette Preview</h1>
+<h1 class="page-title">Palette Preview v2 — 別案 5 種</h1>
 <p class="page-desc">
-  perimeter-catalog の配色案を 5 種比較。各カードは Landing カード / Manufacturer 行 / Section header / Button / Tag を 1 セットで含み、本番のレイアウトに即した <code>--bg</code>/<code>--text</code>/<code>--accent</code> 等の変数を適用しています。Palette E は現状参考。
+  別方向性 5 案 (F〜J) を提案。最上段は現状 (E) 参考用。フォントを v1 より約 30% 大きくし、各案で <code>--accent</code> がリンク・ボタン・行番号・区切り線・タグなど 6〜7 箇所に出るので、差が明確に見えます。
 </p>
 
-<!-- ───── E: Current (reference) ───── -->
+<!-- E: Current -->
 <div class="palette palette-e">
   <div class="palette-label">
-    <span>Palette E — Current (参考)</span>
+    <span>Palette E — Current (現状)</span>
     <span class="tagline">cool gray + muted blue</span>
     <span class="swatches">
       <span class="swatch" style="background:#eef1f5"></span>
       <span class="swatch" style="background:#1a2332"></span>
       <span class="swatch" style="background:#3a6fa8"></span>
-      <span class="swatch" style="background:#2d5a8a"></span>
     </span>
   </div>
   <div class="mockup">
     <div class="mock-header">
-      <div class="mock-brand">Automated Perimeter Archive</div>
-      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+      <div class="mock-brand"><span class="brand-mark">⊚</span>Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16</div>
     </div>
     <div class="mock-body">
-      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-section-title">Landing — Product Card</div>
       <div class="mock-product-card">
         <div class="mock-product-top">
           <div class="mock-product-name">Octopus 900</div>
           <div class="mock-product-year">2005–2020</div>
         </div>
-        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-product-sub">🇨🇭 Switzerland · <a href="#">Haag-Streit AG</a> · 8 models</div>
         <div class="mock-thumbs">
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
         </div>
       </div>
-
-      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-section-title">Manufacturer Page — Model Row</div>
       <div class="mock-model-row">
         <div class="mock-model-so">1</div>
         <div class="mock-model-thumb">img</div>
@@ -302,59 +281,51 @@ body {
         </div>
         <div class="mock-model-year">1984</div>
       </div>
-
-      <div class="mock-section-title">SECTION HEADER (open)</div>
-      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-title">Detail — Stimulus Section</div>
+      <div class="mock-section-head"><span>STIMULUS</span><span class="chev">▾</span></div>
       <div class="mock-section-body">
-        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+        Type: Goldmann III · Luminance: 0.08–10000 asb · <a href="#">View spec sheet</a>
       </div>
-
       <div class="mock-buttons">
-        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-primary">Apply Filter</button>
         <button class="mock-btn-secondary">Reset</button>
         <span class="mock-tag">SO 91</span>
       </div>
     </div>
-    <div class="var-list">
-      bg <code>#eef1f5</code> · bg2 <code>#f6f8fb</code> · text <code>#1a2332</code> · accent <code>#3a6fa8</code>
-    </div>
+    <div class="var-list">accent <code>#3a6fa8</code> · bg <code>#eef1f5</code> · text <code>#1a2332</code></div>
   </div>
 </div>
 
-<!-- ───── A: Warm Cream + Burgundy ───── -->
-<div class="palette palette-a">
+<!-- F: Vermillion + Washi -->
+<div class="palette palette-f">
   <div class="palette-label">
-    <span>Palette A — Warm cream + Burgundy</span>
-    <span class="tagline">古典紙面・図書館</span>
+    <span>Palette F — Vermillion + Washi</span>
+    <span class="tagline">和風アカデミック・朱赤</span>
     <span class="swatches">
-      <span class="swatch" style="background:#f7f3eb"></span>
-      <span class="swatch" style="background:#2a2520"></span>
-      <span class="swatch" style="background:#8a3a4a"></span>
-      <span class="swatch" style="background:#6b2935"></span>
+      <span class="swatch" style="background:#f5efe1"></span>
+      <span class="swatch" style="background:#2a241d"></span>
+      <span class="swatch" style="background:#b04a3f"></span>
     </span>
   </div>
   <div class="mockup">
     <div class="mock-header">
-      <div class="mock-brand">Automated Perimeter Archive</div>
-      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+      <div class="mock-brand"><span class="brand-mark">⊚</span>Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16</div>
     </div>
     <div class="mock-body">
-      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-section-title">Landing — Product Card</div>
       <div class="mock-product-card">
         <div class="mock-product-top">
           <div class="mock-product-name">Octopus 900</div>
           <div class="mock-product-year">2005–2020</div>
         </div>
-        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-product-sub">🇨🇭 Switzerland · <a href="#">Haag-Streit AG</a> · 8 models</div>
         <div class="mock-thumbs">
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
         </div>
       </div>
-
-      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-section-title">Manufacturer Page — Model Row</div>
       <div class="mock-model-row">
         <div class="mock-model-so">1</div>
         <div class="mock-model-thumb">img</div>
@@ -364,59 +335,51 @@ body {
         </div>
         <div class="mock-model-year">1984</div>
       </div>
-
-      <div class="mock-section-title">SECTION HEADER (open)</div>
-      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-title">Detail — Stimulus Section</div>
+      <div class="mock-section-head"><span>STIMULUS</span><span class="chev">▾</span></div>
       <div class="mock-section-body">
-        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+        Type: Goldmann III · Luminance: 0.08–10000 asb · <a href="#">View spec sheet</a>
       </div>
-
       <div class="mock-buttons">
-        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-primary">Apply Filter</button>
         <button class="mock-btn-secondary">Reset</button>
         <span class="mock-tag">SO 91</span>
       </div>
     </div>
-    <div class="var-list">
-      bg <code>#f7f3eb</code> · bg2 <code>#fbf8f1</code> · text <code>#2a2520</code> · accent <code>#8a3a4a</code> (burgundy)
-    </div>
+    <div class="var-list">accent <code>#b04a3f</code> (vermillion) · bg <code>#f5efe1</code> · text <code>#2a241d</code></div>
   </div>
 </div>
 
-<!-- ───── B: Warm Cream + Forest Green ───── -->
-<div class="palette palette-b">
+<!-- G: Deep teal + Warm paper -->
+<div class="palette palette-g">
   <div class="palette-label">
-    <span>Palette B — Warm cream + Forest green</span>
-    <span class="tagline">植物学誌・サイエンス</span>
+    <span>Palette G — Deep teal + Warm paper</span>
+    <span class="tagline">海洋誌・科学</span>
     <span class="swatches">
-      <span class="swatch" style="background:#f6f4ec"></span>
-      <span class="swatch" style="background:#1f2a23"></span>
-      <span class="swatch" style="background:#4a7a5a"></span>
-      <span class="swatch" style="background:#355c43"></span>
+      <span class="swatch" style="background:#f4f1e8"></span>
+      <span class="swatch" style="background:#1c2b2e"></span>
+      <span class="swatch" style="background:#18717a"></span>
     </span>
   </div>
   <div class="mockup">
     <div class="mock-header">
-      <div class="mock-brand">Automated Perimeter Archive</div>
-      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+      <div class="mock-brand"><span class="brand-mark">⊚</span>Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16</div>
     </div>
     <div class="mock-body">
-      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-section-title">Landing — Product Card</div>
       <div class="mock-product-card">
         <div class="mock-product-top">
           <div class="mock-product-name">Octopus 900</div>
           <div class="mock-product-year">2005–2020</div>
         </div>
-        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-product-sub">🇨🇭 Switzerland · <a href="#">Haag-Streit AG</a> · 8 models</div>
         <div class="mock-thumbs">
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
         </div>
       </div>
-
-      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-section-title">Manufacturer Page — Model Row</div>
       <div class="mock-model-row">
         <div class="mock-model-so">1</div>
         <div class="mock-model-thumb">img</div>
@@ -426,59 +389,51 @@ body {
         </div>
         <div class="mock-model-year">1984</div>
       </div>
-
-      <div class="mock-section-title">SECTION HEADER (open)</div>
-      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-title">Detail — Stimulus Section</div>
+      <div class="mock-section-head"><span>STIMULUS</span><span class="chev">▾</span></div>
       <div class="mock-section-body">
-        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+        Type: Goldmann III · Luminance: 0.08–10000 asb · <a href="#">View spec sheet</a>
       </div>
-
       <div class="mock-buttons">
-        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-primary">Apply Filter</button>
         <button class="mock-btn-secondary">Reset</button>
         <span class="mock-tag">SO 91</span>
       </div>
     </div>
-    <div class="var-list">
-      bg <code>#f6f4ec</code> · bg2 <code>#fbf9f2</code> · text <code>#1f2a23</code> · accent <code>#4a7a5a</code> (forest)
-    </div>
+    <div class="var-list">accent <code>#18717a</code> (deep teal) · bg <code>#f4f1e8</code> · text <code>#1c2b2e</code></div>
   </div>
 </div>
 
-<!-- ───── C: Warm Gray + Copper/Amber ───── -->
-<div class="palette palette-c">
+<!-- H: Mustard ochre + Warm sand -->
+<div class="palette palette-h">
   <div class="palette-label">
-    <span>Palette C — Warm gray + Copper/Amber</span>
-    <span class="tagline">現代エディトリアル</span>
+    <span>Palette H — Mustard ochre + Warm sand</span>
+    <span class="tagline">ヴィンテージ書籍</span>
     <span class="swatches">
-      <span class="swatch" style="background:#f4f2ed"></span>
-      <span class="swatch" style="background:#232120"></span>
-      <span class="swatch" style="background:#b07020"></span>
-      <span class="swatch" style="background:#8d5616"></span>
+      <span class="swatch" style="background:#ebe6dd"></span>
+      <span class="swatch" style="background:#2c2a26"></span>
+      <span class="swatch" style="background:#b8862b"></span>
     </span>
   </div>
   <div class="mockup">
     <div class="mock-header">
-      <div class="mock-brand">Automated Perimeter Archive</div>
-      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+      <div class="mock-brand"><span class="brand-mark">⊚</span>Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16</div>
     </div>
     <div class="mock-body">
-      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-section-title">Landing — Product Card</div>
       <div class="mock-product-card">
         <div class="mock-product-top">
           <div class="mock-product-name">Octopus 900</div>
           <div class="mock-product-year">2005–2020</div>
         </div>
-        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-product-sub">🇨🇭 Switzerland · <a href="#">Haag-Streit AG</a> · 8 models</div>
         <div class="mock-thumbs">
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
         </div>
       </div>
-
-      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-section-title">Manufacturer Page — Model Row</div>
       <div class="mock-model-row">
         <div class="mock-model-so">1</div>
         <div class="mock-model-thumb">img</div>
@@ -488,59 +443,51 @@ body {
         </div>
         <div class="mock-model-year">1984</div>
       </div>
-
-      <div class="mock-section-title">SECTION HEADER (open)</div>
-      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-title">Detail — Stimulus Section</div>
+      <div class="mock-section-head"><span>STIMULUS</span><span class="chev">▾</span></div>
       <div class="mock-section-body">
-        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+        Type: Goldmann III · Luminance: 0.08–10000 asb · <a href="#">View spec sheet</a>
       </div>
-
       <div class="mock-buttons">
-        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-primary">Apply Filter</button>
         <button class="mock-btn-secondary">Reset</button>
         <span class="mock-tag">SO 91</span>
       </div>
     </div>
-    <div class="var-list">
-      bg <code>#f4f2ed</code> · bg2 <code>#faf8f3</code> · text <code>#232120</code> · accent <code>#b07020</code> (copper)
-    </div>
+    <div class="var-list">accent <code>#b8862b</code> (mustard ochre) · bg <code>#ebe6dd</code> · text <code>#2c2a26</code></div>
   </div>
 </div>
 
-<!-- ───── D: Current blue + warm accent2 ───── -->
-<div class="palette palette-d">
+<!-- I: Inky navy + Cream -->
+<div class="palette palette-i">
   <div class="palette-label">
-    <span>Palette D — Current blue + warm amber accent2</span>
-    <span class="tagline">現状に暖色 accent 追加 (最小変更)</span>
+    <span>Palette I — Inky navy + Cream</span>
+    <span class="tagline">伝統学術書・落ち着き</span>
     <span class="swatches">
-      <span class="swatch" style="background:#eef1f5"></span>
-      <span class="swatch" style="background:#1a2332"></span>
-      <span class="swatch" style="background:#3a6fa8"></span>
-      <span class="swatch" style="background:#b87334"></span>
+      <span class="swatch" style="background:#f7f5f0"></span>
+      <span class="swatch" style="background:#1a2845"></span>
+      <span class="swatch" style="background:#1f4070"></span>
     </span>
   </div>
   <div class="mockup">
     <div class="mock-header">
-      <div class="mock-brand">Automated Perimeter Archive</div>
-      <div class="mock-meta">260 models · 95 products · updated 2026-05-16 02:00</div>
+      <div class="mock-brand"><span class="brand-mark">⊚</span>Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16</div>
     </div>
     <div class="mock-body">
-      <div class="mock-section-title">LANDING — PRODUCT CARD</div>
+      <div class="mock-section-title">Landing — Product Card</div>
       <div class="mock-product-card">
         <div class="mock-product-top">
           <div class="mock-product-name">Octopus 900</div>
           <div class="mock-product-year">2005–2020</div>
         </div>
-        <div class="mock-product-sub">Switzerland · Haag-Streit AG · 8 models</div>
+        <div class="mock-product-sub">🇨🇭 Switzerland · <a href="#">Haag-Streit AG</a> · 8 models</div>
         <div class="mock-thumbs">
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
-          <div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
         </div>
       </div>
-
-      <div class="mock-section-title">MANUFACTURER PAGE — MODEL ROW</div>
+      <div class="mock-section-title">Manufacturer Page — Model Row</div>
       <div class="mock-model-row">
         <div class="mock-model-so">1</div>
         <div class="mock-model-thumb">img</div>
@@ -550,22 +497,72 @@ body {
         </div>
         <div class="mock-model-year">1984</div>
       </div>
-
-      <div class="mock-section-title">SECTION HEADER (open)</div>
-      <div class="mock-section-head">STIMULUS <span class="chev">▾</span></div>
+      <div class="mock-section-title">Detail — Stimulus Section</div>
+      <div class="mock-section-head"><span>STIMULUS</span><span class="chev">▾</span></div>
       <div class="mock-section-body">
-        Type: Goldmann III, Luminance: 0.08–10000 asb. <a class="mock-link" href="#">See spec sheet</a>
+        Type: Goldmann III · Luminance: 0.08–10000 asb · <a href="#">View spec sheet</a>
       </div>
-
       <div class="mock-buttons">
-        <button class="mock-btn-primary">Apply</button>
+        <button class="mock-btn-primary">Apply Filter</button>
         <button class="mock-btn-secondary">Reset</button>
         <span class="mock-tag">SO 91</span>
       </div>
     </div>
-    <div class="var-list">
-      bg <code>#eef1f5</code> · text <code>#1a2332</code> · accent <code>#3a6fa8</code> (blue) · accent2 <code>#b87334</code> (amber CTA)
+    <div class="var-list">accent <code>#1f4070</code> (inky navy) · bg <code>#f7f5f0</code> · text <code>#1a2845</code></div>
+  </div>
+</div>
+
+<!-- J: Dark mode -->
+<div class="palette palette-j">
+  <div class="palette-label">
+    <span>Palette J — Dark mode (slate + warm gold)</span>
+    <span class="tagline">暗環境・現代的</span>
+    <span class="swatches">
+      <span class="swatch" style="background:#1a1d22"></span>
+      <span class="swatch" style="background:#e8e5dd"></span>
+      <span class="swatch" style="background:#d4a657"></span>
+    </span>
+  </div>
+  <div class="mockup">
+    <div class="mock-header">
+      <div class="mock-brand"><span class="brand-mark">⊚</span>Automated Perimeter Archive</div>
+      <div class="mock-meta">260 models · 95 products · updated 2026-05-16</div>
     </div>
+    <div class="mock-body">
+      <div class="mock-section-title">Landing — Product Card</div>
+      <div class="mock-product-card">
+        <div class="mock-product-top">
+          <div class="mock-product-name">Octopus 900</div>
+          <div class="mock-product-year">2005–2020</div>
+        </div>
+        <div class="mock-product-sub">🇨🇭 Switzerland · <a href="#">Haag-Streit AG</a> · 8 models</div>
+        <div class="mock-thumbs">
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
+          <div class="mock-thumb">img</div><div class="mock-thumb">img</div>
+        </div>
+      </div>
+      <div class="mock-section-title">Manufacturer Page — Model Row</div>
+      <div class="mock-model-row">
+        <div class="mock-model-so">1</div>
+        <div class="mock-model-thumb">img</div>
+        <div>
+          <div class="mock-model-name">HFA Model 610</div>
+          <div class="mock-model-mfr">Humphrey Instruments Inc · Bowl</div>
+        </div>
+        <div class="mock-model-year">1984</div>
+      </div>
+      <div class="mock-section-title">Detail — Stimulus Section</div>
+      <div class="mock-section-head"><span>STIMULUS</span><span class="chev">▾</span></div>
+      <div class="mock-section-body">
+        Type: Goldmann III · Luminance: 0.08–10000 asb · <a href="#">View spec sheet</a>
+      </div>
+      <div class="mock-buttons">
+        <button class="mock-btn-primary">Apply Filter</button>
+        <button class="mock-btn-secondary">Reset</button>
+        <span class="mock-tag">SO 91</span>
+      </div>
+    </div>
+    <div class="var-list">accent <code>#d4a657</code> (warm gold) · bg <code>#1a1d22</code> · text <code>#e8e5dd</code></div>
   </div>
 </div>
 
