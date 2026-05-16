@@ -4,22 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Automated Perimeter Archive</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.4/photoswipe.css">
 <style>
 :root {
-  --bg: #eef1f5;
-  --bg2: #f6f8fb;
-  --bg3: #e4e9f0;
-  --bg4: #dce2eb;
-  --border: #d0d7e2;
-  --border2: #b8c2d0;
-  --text: #1a2332;
-  --text2: #4a5568;
-  --text3: #8694a7;
-  --accent: #3a6fa8;
-  --accent2: #2d5a8a;
-  --accent-soft: rgba(58,111,168,.07);
+  --bg: #f1f3f7;
+  --bg2: #f8fafd;
+  --bg3: #e3e8ef;
+  --bg4: #d4dae5;
+  --border: #d0d6e0;
+  --border2: #b1bccb;
+  --text: #161e2e;
+  --text2: #3d4960;
+  --text3: #7c8497;
+  --accent: #2a4870;
+  --accent2: #1a304f;
+  --accent-soft: rgba(42,72,112,.09);
+  --shadow: rgba(20,30,50,.07);
   --green: #2d8a5e;
   --amber: #a07810;
   --red: #c43c3c;
@@ -27,6 +28,7 @@
   --radius-sm: 6px;
   --font: 'DM Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
+  --serif: 'Source Serif 4', Georgia, serif;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.55; }
@@ -34,16 +36,40 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 /* ── Header ── */
-.site-header { 
-  padding: 20px 28px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  background: var(--bg2); position: sticky; top: 0; z-index: 100;
+.site-header {
+  padding: 22px 28px 18px; border-bottom: 1px solid var(--border);
+  background: var(--bg2);
 }
-.site-title { font-size: 15px; font-weight: 600; letter-spacing: .06em; color: var(--text2); cursor: pointer; user-select: none; transition: color .15s ease; }
-.site-title:hover { color: var(--text); }
+.site-header-top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+  flex-wrap: wrap;
+}
+.site-title-block { flex: 1; min-width: 0; }
+.site-title {
+  font-family: var(--serif);
+  font-size: 24px; font-weight: 700; color: var(--text);
+  letter-spacing: -.01em; line-height: 1.15;
+  cursor: pointer; user-select: none; transition: color .15s ease;
+  display: inline-block;
+}
+.site-title:hover { color: var(--accent); }
 .site-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
-.site-title span { color: var(--accent); }
-.header-meta { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+.site-title .brand-mark { color: var(--accent); font-style: italic; font-weight: 600; margin-right: 2px; }
+.site-title em { font-style: italic; font-weight: 600; }
+.site-tagline {
+  font-family: var(--serif);
+  font-size: 13px; font-style: italic; color: var(--text3);
+  margin-top: 3px; line-height: 1.4;
+}
+.header-meta {
+  font-size: 12px; color: var(--text3); font-family: var(--mono);
+  white-space: nowrap; padding-top: 6px;
+}
+@media (max-width: 599px) {
+  .site-header { padding: 16px 16px 14px; }
+  .site-title { font-size: 20px; }
+  .site-tagline { font-size: 12px; }
+}
 
 /* ── Breadcrumb ── */
 .breadcrumb { 
@@ -143,6 +169,7 @@ a:hover { text-decoration: underline; }
   cursor: pointer; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
   display: flex; flex-direction: column;
   position: relative;
+  box-shadow: 0 1px 2px var(--shadow);
 }
 .product-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
@@ -152,7 +179,7 @@ a:hover { text-decoration: underline; }
 .product-card:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px -8px rgba(0,0,0,.18);
+  box-shadow: 0 6px 18px -4px var(--shadow), 0 2px 6px var(--shadow);
 }
 .product-card:hover::before { opacity: 1; }
 
@@ -162,8 +189,9 @@ a:hover { text-decoration: underline; }
 }
 .product-head-left { flex: 1; min-width: 0; }
 .product-name {
-  font-size: 15px; font-weight: 600; color: var(--text);
-  margin-bottom: 5px; letter-spacing: -.005em; line-height: 1.3;
+  font-family: var(--serif);
+  font-size: 17px; font-weight: 600; color: var(--text);
+  margin-bottom: 5px; letter-spacing: -.01em; line-height: 1.25;
 }
 .product-meta-row {
   font-size: 11px; color: var(--text3);
@@ -225,6 +253,7 @@ a:hover { text-decoration: underline; }
   border-radius: var(--radius); padding: 14px 18px;
   cursor: pointer; transition: all .15s;
   display: grid; grid-template-columns: auto 112px 1fr auto; gap: 14px; align-items: center;
+  box-shadow: 0 1px 2px var(--shadow);
 }
 /* Mobile: drop the year onto a 2nd row beneath the name, so the
    name+manufacturer column gets full remaining width instead of being
@@ -247,12 +276,12 @@ a:hover { text-decoration: underline; }
   .model-row > .model-name-block { grid-area: name; }
   .model-row > .model-year { grid-area: year; }
 }
-.model-row:hover { border-color: var(--accent); background: var(--bg3); }
+.model-row:hover { border-color: var(--accent); background: var(--bg3); box-shadow: 0 3px 8px var(--shadow); }
 .model-so { font-family: var(--mono); font-size: 12px; color: var(--text3); min-width: 32px; text-align: right; }
 .model-thumb { width: 112px; height: 84px; object-fit: contain; border-radius: 4px; background: var(--bg); display: block; }
 .model-thumb-empty { width: 112px; height: 84px; border-radius: 4px; background: var(--bg3); display: flex; align-items: center; justify-content: center; color: var(--text3); }
 .model-thumb-empty svg { width: 100%; height: 100%; padding: 8px; box-sizing: border-box; }
-.model-name { font-size: 14px; font-weight: 500; }
+.model-name { font-family: var(--serif); font-size: 16px; font-weight: 600; letter-spacing: -.005em; }
 .model-year { font-size: 12px; color: var(--text3); font-family: var(--mono); }
 .model-mfr { font-size: 12px; color: var(--text2); margin-top: 2px; }
 
@@ -287,7 +316,7 @@ a:hover { text-decoration: underline; }
 
 /* ── Model Detail (Level 2) ── */
 .detail-header { margin-bottom: 24px; }
-.detail-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.detail-title { font-family: var(--serif); font-size: 26px; font-weight: 700; margin-bottom: 4px; letter-spacing: -.01em; line-height: 1.15; }
 .detail-sub { font-size: 13px; color: var(--text2); }
 .detail-sub span { margin-right: 16px; }
 .country-flag-inline {
@@ -301,16 +330,18 @@ a:hover { text-decoration: underline; }
 .detail-section {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 1px 2px var(--shadow);
 }
 .detail-section.full-width { grid-column: 1 / -1; }
 .section-head {
-  padding: 12px 16px; font-size: 12px; font-weight: 600;
-  letter-spacing: .08em; color: var(--text2);
+  padding: 12px 14px; font-size: 12px; font-weight: 700;
+  letter-spacing: .12em; color: var(--text); text-transform: uppercase;
   border-bottom: 1px solid var(--border); background: var(--bg3);
+  border-left: 3px solid var(--accent);
   cursor: pointer; display: flex; align-items: center; justify-content: space-between;
   user-select: none;
 }
-.section-head .chevron { transition: transform .2s; font-size: 14px; }
+.section-head .chevron { transition: transform .2s; font-size: 14px; color: var(--accent); }
 .section-head.open .chevron { transform: rotate(180deg); }
 .section-body { padding: 14px 16px; }
 .section-body.collapsed { display: none; }
@@ -592,7 +623,6 @@ a:hover { text-decoration: underline; }
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
-  .site-header { padding: 14px 16px; }
   .container { padding: 16px 16px 40px; }
   .breadcrumb { padding: 8px 16px; }
   .product-grid { grid-template-columns: 1fr; }
@@ -603,10 +633,15 @@ a:hover { text-decoration: underline; }
 <body>
 
 <header class="site-header">
-  <div class="site-title" role="link" tabindex="0" title="Back to archive root"
-       onclick="goHome()"
-       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span>//</span> AUTOMATED PERIMETER ARCHIVE</div>
-  <div class="header-meta" id="headerMeta">Loading...</div>
+  <div class="site-header-top">
+    <div class="site-title-block">
+      <div class="site-title" role="link" tabindex="0" title="Back to archive root"
+           onclick="goHome()"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span class="brand-mark">⊚</span> Automated Perimeter <em>Archive</em></div>
+      <div class="site-tagline">A historical catalog of visual field instruments, 1972–2026.</div>
+    </div>
+    <div class="header-meta" id="headerMeta">Loading...</div>
+  </div>
 </header>
 <nav class="breadcrumb" id="breadcrumb"></nav>
 <main class="container" id="app">
@@ -1753,10 +1788,10 @@ function renderPatternSVG(coords, opts) {
     `<circle cx="0" cy="0" r="${r}" fill="none" stroke="#c8d0dc" stroke-width="${stroke}"/>`
   ).join('');
   const axesSvg =
-    `<line x1="${-EXTENT}" y1="0" x2="${EXTENT}" y2="0" stroke="#c8d0dc" stroke-width="${stroke}"/>` +
-    `<line x1="0" y1="${-EXTENT}" x2="0" y2="${EXTENT}" stroke="#c8d0dc" stroke-width="${stroke}"/>`;
+    `<line x1="${-EXTENT}" y1="0" x2="${EXTENT}" y2="0" stroke="#d0d6e0" stroke-width="${stroke}"/>` +
+    `<line x1="0" y1="${-EXTENT}" x2="0" y2="${EXTENT}" stroke="#d0d6e0" stroke-width="${stroke}"/>`;
   const labelsSvg = compact ? '' : rings.map(r =>
-    `<text x="${r + EXTENT * 0.015}" y="${-EXTENT * 0.01}" font-size="${fontSize}" fill="#8694a7" font-family="DM Sans,sans-serif">${r}°</text>`
+    `<text x="${r + EXTENT * 0.015}" y="${-EXTENT * 0.01}" font-size="${fontSize}" fill="#7c8497" font-family="DM Sans,sans-serif">${r}°</text>`
   ).join('');
   const pointsSvg = pts.map(p => {
     const cx = p.x, cy = -p.y; // flip y for SVG
@@ -1767,7 +1802,7 @@ function renderPatternSVG(coords, opts) {
       const s = Number(pointR) * 1.6;
       const topY = cy - s * 1.15;
       const botY = cy + s * 0.58;
-      return `<polygon points="${cx},${topY} ${cx - s},${botY} ${cx + s},${botY}" fill="#1a2332"/>`;
+      return `<polygon points="${cx},${topY} ${cx - s},${botY} ${cx + s},${botY}" fill="#161e2e"/>`;
     }
     if (p.type === 'fixation') {
       const m = (EXTENT * 0.02).toFixed(2);
@@ -1787,7 +1822,7 @@ function renderPatternSVG(coords, opts) {
       // grid points should render visibly smaller than the coarse 3° grid.
       const rMult = Number(p.r) > 0 ? Number(p.r) : 1;
       const effectiveR = (Number(pointR) * rMult).toFixed(2);
-      return `<circle cx="${cx}" cy="${cy}" r="${effectiveR}" fill="#1a2332"/>`;
+      return `<circle cx="${cx}" cy="${cy}" r="${effectiveR}" fill="#161e2e"/>`;
     }
     const pr = Number(pointR);
     const innerR = (pr * 0.55).toFixed(2);
@@ -1801,10 +1836,10 @@ function renderPatternSVG(coords, opts) {
     // thicker at thumbnail size.
     const spreadBase = compact ? 1.3 : 1.05;
     const spreadStep = compact ? 0.80 : 0.75;
-    let svg = `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="#1a2332"/>`;
+    let svg = `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="#161e2e"/>`;
     for (let i = 1; i < count; i++) {
       const rOut = (pr * (spreadBase + (i - 1) * spreadStep)).toFixed(2);
-      svg += `<circle cx="${cx}" cy="${cy}" r="${rOut}" fill="none" stroke="#1a2332" stroke-width="${ringStroke}"/>`;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${rOut}" fill="none" stroke="#161e2e" stroke-width="${ringStroke}"/>`;
     }
     return svg;
   }).join('');
