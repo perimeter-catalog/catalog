@@ -201,12 +201,12 @@ a:hover { text-decoration: underline; }
   background: var(--bg); border: 1px dashed var(--border);
   border-radius: 4px; display: flex; align-items: center; justify-content: center;
   color: var(--text3);
-  font-family: var(--font);
-  font-size: 9px;
-  line-height: 1.25;
-  letter-spacing: .04em;
+  font-family: var(--mono);
+  font-size: 8px;
+  line-height: 1.35;
+  letter-spacing: .14em;
+  text-transform: uppercase;
   text-align: center;
-  padding: 2px;
 }
 
 .product-footer {
@@ -261,9 +261,10 @@ a:hover { text-decoration: underline; }
   background: var(--bg3);
   display: flex; align-items: center; justify-content: center;
   color: var(--text3);
-  font-family: var(--font);
-  font-size: 12px;
-  letter-spacing: .12em;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
   text-align: center;
 }
 .model-name { font-size: 14px; font-weight: 500; }
@@ -1067,7 +1068,7 @@ function productCardHtml(p) {
   const thumbsHtml = visible.length
     ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy">`).join('')
       + (overflow > 0 ? `<span class="product-thumbs-more">+${overflow}</span>` : '')
-    : `<div class="product-thumb-placeholder" title="写真未入手">写真<br>未入手</div>`;
+    : `<div class="product-thumb-placeholder" title="Photo pending">Photo<br>pending</div>`;
 
   return `
     <div class="product-card" onclick="location.hash='#product/${encodeURIComponent(p.name)}'">
@@ -1350,7 +1351,7 @@ function renderProduct(productName) {
     html += `
       <div class="model-row${isOverview ? ' model-row-overview' : ''}" onclick="location.hash='#model/${r.id}'">
         <div class="model-so">${seqLabel}</div>
-        ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy">` : isOverview ? overviewThumb : '<div class="model-thumb-empty">写真未入手</div>'}
+        ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy">` : isOverview ? overviewThumb : '<div class="model-thumb-empty">Photo pending</div>'}
         <div class="model-name-block">
           <div class="model-name">${esc(name)}${isOverview ? '<span class="overview-badge">FAMILY OVERVIEW</span>' : ''}</div>
           <div class="model-mfr">${esc(mfr ? mfr.split('\n')[0] : '')} ${tp ? '· '+esc(tp) : ''}</div>
