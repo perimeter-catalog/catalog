@@ -200,7 +200,13 @@ a:hover { text-decoration: underline; }
   width: 56px; height: 56px; flex-shrink: 0;
   background: var(--bg); border: 1px dashed var(--border);
   border-radius: 4px; display: flex; align-items: center; justify-content: center;
-  color: var(--text3); opacity: .5;
+  color: var(--text3);
+  font-family: var(--font);
+  font-size: 9px;
+  line-height: 1.25;
+  letter-spacing: .04em;
+  text-align: center;
+  padding: 2px;
 }
 
 .product-footer {
@@ -250,8 +256,16 @@ a:hover { text-decoration: underline; }
 .model-row:hover { border-color: var(--accent); background: var(--bg3); }
 .model-so { font-family: var(--mono); font-size: 12px; color: var(--text3); min-width: 32px; text-align: right; }
 .model-thumb { width: 112px; height: 84px; object-fit: contain; border-radius: 4px; background: var(--bg); display: block; }
-.model-thumb-empty { width: 112px; height: 84px; border-radius: 4px; background: var(--bg3); display: flex; align-items: center; justify-content: center; color: var(--text3); }
-.model-thumb-empty svg { width: 100%; height: 100%; padding: 8px; box-sizing: border-box; }
+.model-thumb-empty {
+  width: 112px; height: 84px; border-radius: 4px;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  font-family: var(--font);
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-align: center;
+}
 .model-name { font-size: 14px; font-weight: 500; }
 .model-year { font-size: 12px; color: var(--text3); font-family: var(--mono); }
 .model-mfr { font-size: 12px; color: var(--text2); margin-top: 2px; }
@@ -1053,13 +1067,7 @@ function productCardHtml(p) {
   const thumbsHtml = visible.length
     ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy">`).join('')
       + (overflow > 0 ? `<span class="product-thumbs-more">+${overflow}</span>` : '')
-    : `<div class="product-thumb-placeholder" title="No images yet">
-         <svg viewBox="0 0 38 38" width="22" height="22" xmlns="http://www.w3.org/2000/svg">
-           <path d="M7 28 Q7 10 19 8 Q31 10 31 28" fill="none" stroke="currentColor" stroke-width="1.5"/>
-           <circle cx="19" cy="24" r="1.6" fill="currentColor"/>
-           <line x1="19" y1="15" x2="19" y2="22" stroke="currentColor" stroke-width="1.2"/>
-         </svg>
-       </div>`;
+    : `<div class="product-thumb-placeholder" title="写真未入手">写真<br>未入手</div>`;
 
   return `
     <div class="product-card" onclick="location.hash='#product/${encodeURIComponent(p.name)}'">
@@ -1342,7 +1350,7 @@ function renderProduct(productName) {
     html += `
       <div class="model-row${isOverview ? ' model-row-overview' : ''}" onclick="location.hash='#model/${r.id}'">
         <div class="model-so">${seqLabel}</div>
-        ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy">` : isOverview ? overviewThumb : '<div class="model-thumb-empty"><svg viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet"><path d="M8 30 Q8 10 24 8 Q40 10 40 30" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"/><circle cx="24" cy="26" r="2" fill="currentColor" opacity=".3"/><line x1="24" y1="18" x2="24" y2="24" stroke="currentColor" stroke-width="1" opacity=".2"/></svg></div>'}
+        ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy">` : isOverview ? overviewThumb : '<div class="model-thumb-empty">写真未入手</div>'}
         <div class="model-name-block">
           <div class="model-name">${esc(name)}${isOverview ? '<span class="overview-badge">FAMILY OVERVIEW</span>' : ''}</div>
           <div class="model-mfr">${esc(mfr ? mfr.split('\n')[0] : '')} ${tp ? '· '+esc(tp) : ''}</div>
