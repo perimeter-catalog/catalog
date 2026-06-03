@@ -905,6 +905,48 @@ function parseAbbreviations(text) {
   });
   return map;
 }
+
+// ── Test Programs display filter ──
+// The Test Patterns field doubles as machine-readable source (parsed by
+// parseTestPatterns) and human-readable text. This strips internal editorial
+// notes from the *displayed* copy only — the raw field is left untouched so
+// parsing and provenance are preserved. Removed from display:
+//   • the [Pattern Strategy Map] machine block (duplicates the visible list)
+//   • // developer comments
+//   • internal session / finding audit notes (S-number + KF-number markers)
+//   • bracketed audit sections, e.g. [S86 KF62 — ...]
+//   • exposed Airtable record IDs (recXXXXXXXXXXXXXX)
+function cleanTestProgramsDisplay(text) {
+  if (!text || typeof text !== 'string') return '';
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let inMap = false, inAudit = false;
+  for (const ln of lines) {
+    const s = ln.trim();
+    // [Pattern Strategy Map] machine block → drop until a blank line or next [section]
+    if (/^\[\s*pattern\s*strategy\s*map\s*\]/i.test(s)) { inMap = true; continue; }
+    if (inMap) {
+      if (s === '' || /^\[/.test(s)) { inMap = false; } // fall through to keep this line
+      else continue;
+    }
+    // Bracketed audit section header, e.g. "[S86 KF62 — ...]" → drop until blank line
+    if (/^\[\s*S\d+\b.*\]/.test(s)) { inAudit = true; continue; }
+    if (inAudit) { if (s === '') inAudit = false; continue; }
+    if (/^\/\//.test(s)) continue;                 // developer comment
+    if (/\bKF\d+\b/.test(s)) continue;             // finding-reference audit line
+    if (/\bS\d{2,4}\b/.test(s) &&
+        /(KF|cleanup|correction|resolved|retro|audit|確定)/i.test(s)) continue;
+    if (/see audit notes/i.test(s)) continue;
+    // Strip exposed Airtable record IDs and tidy "PF: recXXX." remnants
+    const cleaned = ln
+      .replace(/\bPF:\s*rec[A-Za-z0-9]{14}\.?/g, '')
+      .replace(/\brec[A-Za-z0-9]{14}\b/g, '(linked PF)')
+      .replace(/\s+$/, '');
+    out.push(cleaned);
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 // Auto-linkify PMID / PMC / DOI / plain URLs inside already-HTML-escaped text.
 // Input MUST come from esc() or equivalent (no untrusted HTML).
 function linkifyRefs(escapedText) {
@@ -1568,7 +1610,7 @@ async function renderModel(recId) {
       <div class="detail-section full-width">
         <div class="section-head open" onclick="toggleSection(this)">TEST PROGRAMS <span class="chevron">▾</span></div>
         <div class="section-body">
-          <div class="strategies-block">${esc(f[F.patterns])}</div>
+          <div class="strategies-block">${esc(cleanTestProgramsDisplay(f[F.patterns]))}</div>
           <div id="pfGrid" style="margin-top:16px"><div class="loading"><div class="spinner"></div><p>Loading patterns...</p></div></div>
         </div>
       </div>` : `<div class="detail-section full-width"><div id="pfGrid"></div></div>`}
