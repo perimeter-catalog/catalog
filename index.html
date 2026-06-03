@@ -645,7 +645,7 @@ a:hover { text-decoration: underline; }
 const BASE_ID = 'appjzmUh919TATEdP';
 const MAIN_TABLE = 'tblZb6Bxpy1vcovjl';
 const PF_TABLE = 'tbl5aqQ4wVa4HrXdN';
-const TOKEN = 'pat0ernpUewVRI5Na.594c9aeeeed94fbd4829e5e0038c92b3e94a01351415d0f00c86f897324bce61';
+const API_BASE = 'https://airtable-proxy.gchota.workers.dev'; // e.g. https://airtable-proxy.<account>.workers.dev  (no trailing slash)
 
 // Field IDs
 const F = {
@@ -766,11 +766,11 @@ async function fetchAllMain() {
   ];
   let all = [], offset = null;
   do {
-    let url = `https://api.airtable.com/v0/${BASE_ID}/${MAIN_TABLE}?pageSize=100&returnFieldsByFieldId=true`;
+    let url = `${API_BASE}/v0/${BASE_ID}/${MAIN_TABLE}?pageSize=100&returnFieldsByFieldId=true`;
     fields.forEach(f => url += `&fields%5B%5D=${f}`);
     url += `&sort%5B0%5D%5Bfield%5D=${F.sortOrder}&sort%5B0%5D%5Bdirection%5D=asc`;
     if (offset) url += `&offset=${offset}`;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`Airtable ${res.status}`);
     const data = await res.json();
     all.push(...data.records);
@@ -801,11 +801,11 @@ async function fetchPFForModel(recId) {
   for (let i = 0; i < pfIds.length; i += 20) {
     const batch = pfIds.slice(i, i + 20);
     const formula = `OR(${batch.map(b => `RECORD_ID()='${b}'`).join(',')})`;
-    let url = `https://api.airtable.com/v0/${BASE_ID}/${PF_TABLE}?returnFieldsByFieldId=true&pageSize=100`;
+    let url = `${API_BASE}/v0/${BASE_ID}/${PF_TABLE}?returnFieldsByFieldId=true&pageSize=100`;
     fields.forEach(f => url += `&fields%5B%5D=${f}`);
     url += `&filterByFormula=${encodeURIComponent(formula)}`;
     try {
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         allPF.push(...(data.records || []));
@@ -1210,12 +1210,12 @@ function renderProducts() {
     }
     const fetchLatestModified = async (tableId, fieldId) => {
       try {
-        const url = `https://api.airtable.com/v0/${BASE_ID}/${tableId}`
+        const url = `${API_BASE}/v0/${BASE_ID}/${tableId}`
           + `?pageSize=1&returnFieldsByFieldId=true`
           + `&fields%5B%5D=${fieldId}`
           + `&sort%5B0%5D%5Bfield%5D=${fieldId}`
           + `&sort%5B0%5D%5Bdirection%5D=desc`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+        const res = await fetch(url);
         if (!res.ok) return 0;
         const data = await res.json();
         const lm = data.records?.[0]?.fields?.[fieldId];
@@ -1914,8 +1914,8 @@ async function renderPattern(pfId, modelId) {
   if (cached) pfRec = cached.find(p => p.id === pfId);
   if (!pfRec) {
     // Fetch directly
-    const url = `https://api.airtable.com/v0/${BASE_ID}/${PF_TABLE}/${pfId}?returnFieldsByFieldId=true`;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}` } });
+    const url = `${API_BASE}/v0/${BASE_ID}/${PF_TABLE}/${pfId}?returnFieldsByFieldId=true`;
+    const res = await fetch(url);
     if (res.ok) pfRec = await res.json();
   }
   if (!pfRec) { $app.innerHTML = '<p>Pattern not found.</p>'; return; }
