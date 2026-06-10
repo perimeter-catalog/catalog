@@ -519,6 +519,10 @@ a:hover { text-decoration: underline; }
   display: flex; flex-direction: column;
 }
 .pattern-card:hover { border-color: var(--accent); background: var(--bg4); }
+/* Cards are real <a> links (keyboard / middle-click / copy-link friendly)
+   but must not look like text links. */
+a.product-card, a.model-row, a.pattern-card { color: inherit; text-decoration: none; }
+a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration: none; }
 .pattern-card .pname {
   font-size: 13px; font-weight: 500; margin-bottom: 4px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
@@ -1140,7 +1144,7 @@ function productCardHtml(p) {
     : `<div class="product-thumb-placeholder" title="Photo pending"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="1.8" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.3"/></svg><span>Photo<br>pending</span></div>`;
 
   return `
-    <div class="product-card" onclick="location.hash='#product/${encodeURIComponent(p.name)}'">
+    <a class="product-card" href="#product/${encodeURIComponent(p.name)}">
       <div class="product-head">
         <div class="product-head-left">
           <div class="product-name">${esc(p.name)}</div>
@@ -1155,7 +1159,7 @@ function productCardHtml(p) {
           ? `<span class="product-ff-tags">${p.formFactors.map(ff => `<span class="product-type-tag">${esc(ff)}</span>`).join('')}</span>`
           : ''}
       </div>
-    </div>
+    </a>
   `;
 }
 
@@ -1457,7 +1461,7 @@ function renderProduct(productName) {
     const seqLabel = isOverview ? '' : String(++groupSeq);
     const overviewThumb = `<div class="model-thumb-overview" title="Family Overview"><svg viewBox="0 0 80 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect class="ovw-back"  x="22" y="20" width="44" height="34" rx="3"/><rect class="ovw-mid"   x="14" y="14" width="44" height="34" rx="3"/><rect class="ovw-front" x="6"  y="8"  width="44" height="34" rx="3"/></svg></div>`;
     html += `
-      <div class="model-row${isOverview ? ' model-row-overview' : ''}" onclick="location.hash='#model/${r.id}'">
+      <a class="model-row${isOverview ? ' model-row-overview' : ''}" href="#model/${r.id}">
         <div class="model-so">${seqLabel}</div>
         ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy">` : isOverview ? overviewThumb : '<div class="model-thumb-empty"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="2" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.2"/></svg><span>Photo pending</span></div>'}
         <div class="model-name-block">
@@ -1465,7 +1469,7 @@ function renderProduct(productName) {
           <div class="model-mfr">${esc(mfr ? mfr.split('\n')[0] : '')} ${tp ? '· '+esc(tp) : ''}</div>
         </div>
         <div class="model-year">${esc(yr ? String(yr).substring(0,30) : '')}</div>
-      </div>
+      </a>
     `;
   });
   html += '</div>';
@@ -1742,12 +1746,12 @@ async function renderModel(recId) {
         thumbHtml = `<img src="${attachSrc}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none'">`;
       }
       pgHtml += `
-        <div class="pattern-card" onclick="location.hash='#pattern/${pf.id}/${recId}'">
+        <a class="pattern-card" href="#pattern/${pf.id}/${recId}">
           <div class="pname">${esc(name)}</div>
           <div class="pcat">${esc(cat)}</div>
           ${ptsShort ? `<div class="pcount">${ptsShort} points</div>` : ''}
           ${thumbHtml}
-        </div>
+        </a>
       `;
     });
     pgHtml += '</div>';
@@ -2288,6 +2292,7 @@ function goHome() {
   // obtrusive than a filter that hides most of the archive).
   formFactorFilter = 'all';
   countryFilter = 'all';
+  searchQuery = '';
   // If already at root, re-render (hashchange won't fire for same hash)
   if (!location.hash || location.hash === '#') {
     renderProducts();
@@ -2299,7 +2304,13 @@ function goHome() {
   }
 }
 
+// Scroll position per hash so Back returns to where the user was
+// (notably long list views). Saved in route() when leaving a page.
+const scrollPositions = {};
+let currentRouteHash = location.hash || '#';
+
 function route() {
+  scrollPositions[currentRouteHash] = window.scrollY;
   const hash = location.hash || '#';
   const parts = hash.slice(1).split('/');
   const level = parts[0];
@@ -2313,7 +2324,8 @@ function route() {
   } else {
     renderProducts();
   }
-  window.scrollTo(0, 0);
+  window.scrollTo(0, scrollPositions[hash] || 0);
+  currentRouteHash = hash;
 }
 
 // ═══════════════════════════════════════════════════════════════
