@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Automated Perimeter Archive</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%233a6fa8%22%2F%3E%3Cg%20fill%3D%22%23fff%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2214%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2250%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2214%22%20cy%3D%2232%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2232%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%222.5%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2220%22%20r%3D%222.5%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2244%22%20r%3D%222.5%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2244%22%20r%3D%222.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<meta name="description" content="A reference archive of automated perimeters: devices, test patterns, and stimulus coordinates for visual field testing, organized by manufacturer and model.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Automated Perimeter Archive">
+<meta property="og:description" content="A reference archive of automated perimeters: devices, test patterns, and stimulus coordinates for visual field testing, organized by manufacturer and model.">
+<meta property="og:url" content="https://perimeter-catalog.github.io/catalog/">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.4/photoswipe.css">
 <style>
@@ -1234,7 +1240,9 @@ function renderProducts() {
     if (max <= 0) return;
     const d = new Date(max);
     const pad = n => String(n).padStart(2, '0');
-    const stamp = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    let tz = '';
+    try { tz = ' ' + (new Intl.DateTimeFormat('en', {timeZoneName:'short'}).formatToParts(d).find(p => p.type === 'timeZoneName')?.value || ''); } catch(e) {}
+    const stamp = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}${tz.trimEnd()}`;
     metaEl.textContent = `${allRecords.length} models · ${productList.length} products · updated ${stamp}`;
   })();
 
@@ -2274,7 +2282,7 @@ async function init() {
     // PhotoSwipe module script at the bottom of <body>.
     route();
   } catch(e) {
-    $app.innerHTML = `<div class="loading"><p style="color:var(--red)">Error loading data: ${esc(e.message)}</p></div>`;
+    $app.innerHTML = `<div class="loading"><p style="color:var(--red)">Could not load the archive data. Please check your connection and try again.</p><p style="color:var(--text3);font-size:.8rem;font-family:var(--mono)">${esc(e.message)}</p><button onclick="location.reload()" style="margin-top:14px;padding:8px 24px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font:inherit;font-weight:500;cursor:pointer">Retry</button></div>`;
     console.error(e);
   }
 }
