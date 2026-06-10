@@ -12,6 +12,16 @@
 <meta property="og:url" content="https://perimeter-catalog.github.io/catalog/">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.4/photoswipe.css">
+<script>
+// Apply saved/system theme before first paint to avoid a light flash.
+(function(){
+  try {
+    const t = localStorage.getItem('apa-theme');
+    if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches))
+      document.documentElement.dataset.theme = 'dark';
+  } catch(e) {}
+})();
+</script>
 <style>
 :root {
   --bg: #eef1f5;
@@ -33,6 +43,30 @@
   --radius-sm: 6px;
   --font: 'DM Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
+  --svg-grid: #c8d0dc;   /* pattern SVG: rings / axes */
+  --svg-point: #1a2332;  /* pattern SVG: test points */
+  color-scheme: light;
+}
+/* ── Dark theme (palette derived from palette-preview.html base) ── */
+html[data-theme="dark"] {
+  --bg: #1f2329;
+  --bg2: #262b33;
+  --bg3: #2a2f37;
+  --bg4: #323845;
+  --border: #2e343c;
+  --border2: #3e4654;
+  --text: #e2e6ec;
+  --text2: #aab3c0;
+  --text3: #7d8694;
+  --accent: #6f9fd8;
+  --accent2: #8ab2e0;
+  --accent-soft: rgba(111,159,216,.12);
+  --green: #4cb583;
+  --amber: #d0a53a;
+  --red: #e06c6c;
+  --svg-grid: #3e4654;
+  --svg-point: #dde3ea;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.55; }
@@ -51,6 +85,12 @@ a:hover { text-decoration: underline; }
 .site-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
 .site-title span { color: var(--accent); }
 .header-meta { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+.theme-toggle {
+  font-size: 14px; line-height: 1; width: 30px; height: 30px; flex-shrink: 0;
+  border: 1px solid var(--border2); border-radius: 50%;
+  background: transparent; color: var(--text2); cursor: pointer; transition: all .15s;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── Breadcrumb ── */
 .breadcrumb { 
@@ -661,6 +701,7 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
        onclick="goHome()"
        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span>//</span> AUTOMATED PERIMETER ARCHIVE</div>
   <div class="header-meta" id="headerMeta">Loading...</div>
+  <button type="button" id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">&#x263E;</button>
 </header>
 <nav class="breadcrumb" id="breadcrumb"></nav>
 </div>
@@ -1918,13 +1959,13 @@ function renderPatternSVG(coords, opts) {
   const fontSize = (EXTENT * 0.05).toFixed(2);
 
   const ringsSvg = rings.map(r =>
-    `<circle cx="0" cy="0" r="${r}" fill="none" stroke="#c8d0dc" stroke-width="${stroke}"/>`
+    `<circle cx="0" cy="0" r="${r}" fill="none" stroke="var(--svg-grid)" stroke-width="${stroke}"/>`
   ).join('');
   const axesSvg =
-    `<line x1="${-EXTENT}" y1="0" x2="${EXTENT}" y2="0" stroke="#c8d0dc" stroke-width="${stroke}"/>` +
-    `<line x1="0" y1="${-EXTENT}" x2="0" y2="${EXTENT}" stroke="#c8d0dc" stroke-width="${stroke}"/>`;
+    `<line x1="${-EXTENT}" y1="0" x2="${EXTENT}" y2="0" stroke="var(--svg-grid)" stroke-width="${stroke}"/>` +
+    `<line x1="0" y1="${-EXTENT}" x2="0" y2="${EXTENT}" stroke="var(--svg-grid)" stroke-width="${stroke}"/>`;
   const labelsSvg = compact ? '' : rings.map(r =>
-    `<text x="${r + EXTENT * 0.015}" y="${-EXTENT * 0.01}" font-size="${fontSize}" fill="#8694a7" font-family="DM Sans,sans-serif">${r}°</text>`
+    `<text x="${r + EXTENT * 0.015}" y="${-EXTENT * 0.01}" font-size="${fontSize}" fill="var(--text3)" font-family="DM Sans,sans-serif">${r}°</text>`
   ).join('');
   const pointsSvg = pts.map(p => {
     const cx = p.x, cy = -p.y; // flip y for SVG
@@ -1935,11 +1976,11 @@ function renderPatternSVG(coords, opts) {
       const s = Number(pointR) * 1.6;
       const topY = cy - s * 1.15;
       const botY = cy + s * 0.58;
-      return `<polygon points="${cx},${topY} ${cx - s},${botY} ${cx + s},${botY}" fill="#1a2332"/>`;
+      return `<polygon points="${cx},${topY} ${cx - s},${botY} ${cx + s},${botY}" fill="var(--svg-point)"/>`;
     }
     if (p.type === 'fixation') {
       const m = (EXTENT * 0.02).toFixed(2);
-      return `<path d="M${cx - m},${cy} L${cx + +m},${cy} M${cx},${cy - m} L${cx},${cy + +m}" stroke="#c43c3c" stroke-width="${stroke}"/>`;
+      return `<path d="M${cx - m},${cy} L${cx + +m},${cy} M${cx},${cy - m} L${cx},${cy + +m}" stroke="var(--red)" stroke-width="${stroke}"/>`;
     }
     // Concentric-circle notation for repeated-test points:
     //   count=1 → single filled dot
@@ -1955,7 +1996,7 @@ function renderPatternSVG(coords, opts) {
       // grid points should render visibly smaller than the coarse 3° grid.
       const rMult = Number(p.r) > 0 ? Number(p.r) : 1;
       const effectiveR = (Number(pointR) * rMult).toFixed(2);
-      return `<circle cx="${cx}" cy="${cy}" r="${effectiveR}" fill="#1a2332"/>`;
+      return `<circle cx="${cx}" cy="${cy}" r="${effectiveR}" fill="var(--svg-point)"/>`;
     }
     const pr = Number(pointR);
     const innerR = (pr * 0.55).toFixed(2);
@@ -1969,10 +2010,10 @@ function renderPatternSVG(coords, opts) {
     // thicker at thumbnail size.
     const spreadBase = compact ? 1.3 : 1.05;
     const spreadStep = compact ? 0.80 : 0.75;
-    let svg = `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="#1a2332"/>`;
+    let svg = `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="var(--svg-point)"/>`;
     for (let i = 1; i < count; i++) {
       const rOut = (pr * (spreadBase + (i - 1) * spreadStep)).toFixed(2);
-      svg += `<circle cx="${cx}" cy="${cy}" r="${rOut}" fill="none" stroke="#1a2332" stroke-width="${ringStroke}"/>`;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${rOut}" fill="none" stroke="var(--svg-point)" stroke-width="${ringStroke}"/>`;
     }
     return svg;
   }).join('');
@@ -2342,6 +2383,20 @@ function toggleCountryDropdown(ev) {
     document.addEventListener('keydown', esc);
   }
 }
+// ── Dark mode toggle (C1) ──
+function updateThemeBtn() {
+  const b = document.getElementById('themeToggle');
+  if (b) b.textContent = document.documentElement.dataset.theme === 'dark' ? '\u2600' : '\u263e';
+}
+function toggleTheme() {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  if (dark) delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = 'dark';
+  try { localStorage.setItem('apa-theme', dark ? 'light' : 'dark'); } catch(e) {}
+  updateThemeBtn();
+}
+updateThemeBtn();
+
 // Copy the coordinate table CSV (built during renderPattern) to clipboard.
 function copyCoordCSV(btn) {
   const csv = window._coordCSV || '';
