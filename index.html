@@ -40,10 +40,11 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 /* ── Header ── */
+.site-top { position: sticky; top: 0; z-index: 100; }
 .site-header { 
   padding: 20px 28px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  background: var(--bg2); position: sticky; top: 0; z-index: 100;
+  background: var(--bg2);
 }
 .site-title { font-size: 15px; font-weight: 600; letter-spacing: .06em; color: var(--text2); cursor: pointer; user-select: none; transition: color .15s ease; }
 .site-title:hover { color: var(--text); }
@@ -647,6 +648,7 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
 </head>
 <body>
 
+<div class="site-top">
 <header class="site-header">
   <div class="site-title" role="link" tabindex="0" title="Back to archive root"
        onclick="goHome()"
@@ -654,6 +656,7 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
   <div class="header-meta" id="headerMeta">Loading...</div>
 </header>
 <nav class="breadcrumb" id="breadcrumb"></nav>
+</div>
 <main class="container" id="app">
   <div class="loading"><div class="spinner"></div><p>Fetching archive data from Airtable...</p></div>
 </main>
