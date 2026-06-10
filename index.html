@@ -101,6 +101,18 @@ a:hover { text-decoration: underline; }
 .ff-filter.active { background-color: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .sort-bar-divider { width: 1px; align-self: stretch; background: var(--border); margin: 2px 4px; }
 
+/* ── Search box ── */
+.ff-filter.search-input {
+  cursor: text; background-image: none; padding: 5px 12px; width: 190px;
+  border-radius: 20px;
+}
+.ff-filter.search-input::placeholder { color: var(--text3); }
+.ff-filter.search-input::-webkit-search-cancel-button { cursor: pointer; }
+.no-results {
+  font-size: 13px; color: var(--text3); font-family: var(--mono);
+  padding: 40px 0; text-align: center;
+}
+
 /* ── Custom dropdown (used for Country filter so flag <img> works everywhere,
      including Windows where Unicode regional indicators don't render as flags) ── */
 .cd { position: relative; display: inline-block; }
@@ -747,6 +759,7 @@ const PF = {
 let allRecords = [];
 let pfCache = {};  // recId -> PF data
 let sortMode = 'year'; // 'year' | 'name'
+let searchQuery = ''; // incremental search across product / model / manufacturer names
 let formFactorFilter = 'all'; // 'all' | 'Table Top' | 'HMD/VR' | 'Tangent Screen' | 'Tablet' | 'Software' | 'Other'
 let countryFilter = 'all'; // 'all' | <country name from the Country singleSelect>
 
@@ -1158,7 +1171,13 @@ function renderProducts() {
     // Competer spans Sweden + USA).
     const formFactors = [...new Set(records.map(r => sel(r.fields?.[F.formFactor])).filter(Boolean))];
     const countries = [...new Set(records.map(r => countryName(r)).filter(Boolean))];
-    return { name, records, year: yr, first, formFactors, countries };
+    // Lower-cased haystack for the search box: product name + every model
+    // name + every manufacturer in the group.
+    const searchText = [name,
+      ...records.map(r => g(r, F.model)),
+      ...records.map(r => g(r, F.manufacturer))
+    ].filter(Boolean).join(' ').toLowerCase();
+    return { name, records, year: yr, first, formFactors, countries, searchText };
   });
 
   // Baseline ordering applies to the full product list first so dropdown
@@ -1173,8 +1192,15 @@ function renderProducts() {
   // Per-bucket counts are computed against the *other* filter's current
   // state so each dropdown's count reflects "what I'd see if I picked this
   // on top of my current selection" — standard faceted-search behaviour.
-  const afterCountryOnly = productList.filter(p => matchCountry(p, countryFilter));
-  const afterFFOnly = productList.filter(p => matchFF(p, formFactorFilter));
+  // Search filter: space-separated tokens, AND semantics, case-insensitive
+  // substring match. Applied before the faceted filters so dropdown counts
+  // reflect the searched subset.
+  const tokens = searchQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const matchSearch = p => tokens.every(t => p.searchText.includes(t));
+  const searchedList = productList.filter(matchSearch);
+
+  const afterCountryOnly = searchedList.filter(p => matchCountry(p, countryFilter));
+  const afterFFOnly = searchedList.filter(p => matchFF(p, formFactorFilter));
 
   // Form Factor counts (among products that already pass the country filter).
   const ffCounts = {};
@@ -1192,7 +1218,7 @@ function renderProducts() {
   );
 
   // Visible list after both filters.
-  const visibleList = productList.filter(p => matchFF(p, formFactorFilter) && matchCountry(p, countryFilter));
+  const visibleList = searchedList.filter(p => matchFF(p, formFactorFilter) && matchCountry(p, countryFilter));
 
   setBreadcrumb([{ label: 'Archive', hash: '#' }]);
   const metaEl = document.getElementById('headerMeta');
@@ -1292,13 +1318,20 @@ function renderProducts() {
 
   const ffActive = formFactorFilter !== 'all';
   const countryActive = countryFilter !== 'all';
-  const anyActive = ffActive || countryActive;
+  const searchActive = tokens.length > 0;
+  const anyActive = ffActive || countryActive || searchActive;
   const countLabel = anyActive
     ? `${visibleList.length} of ${productList.length} products`
     : `${productList.length} products`;
 
   let html = `
     <div class="sort-bar">
+      <div class="ff-filter-group">
+        <label>SEARCH</label>
+        <input id="searchInput" class="ff-filter search-input ${searchActive?'active':''}" type="search"
+          placeholder="Name / manufacturer…" value="${esc(searchQuery).replace(/"/g,'&quot;')}"
+          oninput="searchQuery=this.value;renderProducts()" aria-label="Search products">
+      </div>
       <div class="ff-filter-group">
         <label>FORM FACTOR</label>
         <select class="ff-filter ${ffActive?'active':''}" onchange="formFactorFilter=this.value;renderProducts()">
@@ -1326,10 +1359,27 @@ function renderProducts() {
       </div>
       <span class="record-count">${countLabel}</span>
     </div>
-    <div class="product-grid">${visibleList.map(productCardHtml).join('')}</div>
+    ${visibleList.length
+      ? `<div class="product-grid">${visibleList.map(productCardHtml).join('')}</div>`
+      : `<p class="no-results">No products match${searchActive ? ` “${esc(searchQuery)}”` : ''}. Try clearing the search or filters.</p>`}
   `;
 
+  // Re-rendering replaces the search input, so preserve focus + caret when
+  // the user is typing in it.
+  const prevSearch = document.getElementById('searchInput');
+  const hadFocus = prevSearch && document.activeElement === prevSearch;
+  const selStart = hadFocus ? prevSearch.selectionStart : null;
+  const selEnd = hadFocus ? prevSearch.selectionEnd : null;
+
   $app.innerHTML = html;
+
+  if (hadFocus) {
+    const si = document.getElementById('searchInput');
+    if (si) {
+      si.focus();
+      try { si.setSelectionRange(selStart, selEnd); } catch(e) {}
+    }
+  }
 }
 
 // ── Level 1: Product Detail (Model List) ──
