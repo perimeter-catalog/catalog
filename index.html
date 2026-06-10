@@ -1109,9 +1109,33 @@ function openPatternImage(eye) {
 const $app = document.getElementById('app');
 const $bc = document.getElementById('breadcrumb');
 
+// ── List-view state ⇄ URL (B2) ──
+// Root list state (filters / search / sort) is mirrored into the hash as
+// '#?ff=..&country=..&q=..&sort=..' so filtered views survive reload and can
+// be shared or bookmarked. Defaults are omitted; all-default → plain root.
+function listHash() {
+  const p = new URLSearchParams();
+  if (formFactorFilter !== 'all') p.set('ff', formFactorFilter);
+  if (countryFilter !== 'all') p.set('country', countryFilter);
+  if (searchQuery.trim()) p.set('q', searchQuery);
+  if (sortMode !== 'year') p.set('sort', sortMode);
+  const s = p.toString();
+  return s ? '#?' + s : '#';
+}
+function applyListParams(qs) {
+  const p = new URLSearchParams(qs || '');
+  formFactorFilter = p.get('ff') || 'all';
+  countryFilter = p.get('country') || 'all';
+  searchQuery = p.get('q') || '';
+  sortMode = p.get('sort') === 'name' ? 'name' : 'year';
+}
+
 function setBreadcrumb(items) {
   $bc.innerHTML = items.map((it, i) => {
-    if (i < items.length - 1) return `<a href="${it.hash}">${esc(it.label)}</a><span class="sep">›</span>`;
+    // 'Archive' root crumbs carry the current list state so going back to
+    // the list keeps the user's filters/search.
+    const href = it.hash === '#' ? listHash() : it.hash;
+    if (i < items.length - 1) return `<a href="${href}">${esc(it.label)}</a><span class="sep">›</span>`;
     return `<span style="color:var(--text)">${esc(it.label)}</span>`;
   }).join('');
 }
@@ -1386,6 +1410,15 @@ function renderProducts() {
       si.focus();
       try { si.setSelectionRange(selStart, selEnd); } catch(e) {}
     }
+  }
+
+  // Mirror list state into the URL. replaceState (not pushState) so each
+  // keystroke / dropdown change doesn't pollute history, and no hashchange
+  // fires (we are already rendered).
+  const lh = listHash();
+  if ((location.hash || '#') !== lh) {
+    history.replaceState(null, '', location.pathname + location.search + (lh === '#' ? '' : lh));
+    currentRouteHash = lh;
   }
 }
 
@@ -2325,6 +2358,9 @@ function route() {
   } else if (level === 'pattern' && parts[1]) {
     renderPattern(parts[1], parts[2] || '');
   } else {
+    // Root list: state always comes from the URL ('#?ff=..' or defaults),
+    // so reload / back / shared links restore the exact view.
+    applyListParams(hash.startsWith('#?') ? hash.slice(2) : '');
     renderProducts();
   }
   window.scrollTo(0, scrollPositions[hash] || 0);
