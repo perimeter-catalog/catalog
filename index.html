@@ -551,6 +551,13 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
 .coord-table table { width: 100%; border-collapse: collapse; }
 .coord-table th, .coord-table td { padding: 3px 8px; border-bottom: 1px solid var(--border); text-align: right; }
 .coord-table th { color: var(--text3); position: sticky; top: 0; background: var(--bg2); }
+.csv-copy-btn {
+  font-size: 11px; font-family: var(--mono); padding: 3px 12px;
+  border: 1px solid var(--border2); border-radius: 20px;
+  background: transparent; color: var(--text2); cursor: pointer; transition: all .15s;
+}
+.csv-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+.coord-source { font-size: 12px; font-family: var(--mono); color: var(--text3); }
 .coord-provenance { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-family: var(--mono); border: 1px solid; }
 .coord-provenance .cp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .coord-provenance .cp-detail { color: var(--text3); font-style: italic; }
@@ -749,6 +756,9 @@ const PF = {
   eyeVariant: 'fldBnpVw9nrtsDWrM',
   uncertaintyNotes: 'fldJs6ucpY4TqghW5',
   provenance: 'fldldHnQQ7h3Um1y5',
+  sourceType: 'fldow4bG48zWqnkqq',     // singleSelect: e.g. Manual / Paper / Brochure
+  refNo: 'fldJXAZbDix0K2DH3',          // Reference No.
+  sourceFigPage: 'fld6SqyOss06kFcU7',  // Source Figure / Page
   coordsOD: 'fldA40icdOGmJjm6f',
   coordsOS: 'fldFWVwTwAVUcAyCY',
   coordsOdPolar: 'fldkv1UL0IT4zIFAV',
@@ -819,6 +829,7 @@ async function fetchPFForModel(recId) {
   
   const fields = [PF.name, PF.patternId, PF.so, PF.deviceLink, PF.pointCount, 
     PF.description, PF.category, PF.measMode, PF.eyeVariant, PF.uncertaintyNotes, PF.provenance,
+    PF.sourceType, PF.refNo, PF.sourceFigPage,
     PF.coordsOD, PF.coordsOS, PF.coordsOdPolar, PF.coordsOsPolar,
     PF.osMirror, PF.imageOD, PF.imageOS, PF.displayPrimary];
   
@@ -2150,8 +2161,21 @@ async function renderPattern(pfId, modelId) {
           const totalLabel = markers.length > 0
             ? `${testPts.length} test points + ${markers.length} marker${markers.length>1?'s':''}${isPolar ? ', polar' : ''}`
             : `${coords.length} points${isPolar ? ', polar' : ''}`;
+          // CSV export of the table (D1). Columns mirror the visible table.
+          const hasType = isPolar && coords.some(c => c.type);
+          const hasCount = coords.some(c => c.count);
+          const head = isPolar ? ['#','r_deg','theta_deg'] : ['#','x','y'];
+          if (hasType) head.push('type');
+          if (hasCount) head.push('count');
+          const rows = coords.map((c, i) => {
+            const row = isPolar ? [i+1, c.r, c.theta] : [i+1, c.x, c.y];
+            if (hasType) row.push(c.type || 'test');
+            if (hasCount) row.push(c.count || '');
+            return row.join(',');
+          });
+          window._coordCSV = [head.join(','), ...rows].join('\n');
           return `
-          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px">Point Coordinates (${totalLabel})</h3>
+          <h3 style="font-size:14px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:10px"><span>Point Coordinates (${totalLabel})</span><button type="button" class="csv-copy-btn" onclick="copyCoordCSV(this)" title="Copy coordinate table as CSV">Copy CSV</button></h3>
           <div class="coord-table">
             <table>
               ${isPolar
@@ -2168,20 +2192,23 @@ async function renderPattern(pfId, modelId) {
 
     ${(() => {
       const prov = sel(pf[PF.provenance]);
-      if (!prov || !coords.length) return '';
       const detailMap = {
         'Exact': 'precisely known from spec or regular grid',
         'Image-derived': 'extracted from figure (may contain small errors)',
         'Traced': 'traced from original figure (without calibration)',
       };
-      return `
-      <div style="margin-top:14px">
+      const provHtml = (prov && coords.length) ? `
         <span class="coord-provenance" data-prov="${esc(prov)}">
           <span class="cp-dot"></span>
           <span>${esc(prov)}</span>
           <span class="cp-detail">— coordinates ${esc(detailMap[prov] || '')}</span>
-        </span>
-      </div>`;
+        </span>` : '';
+      // Source info (D2): Source Type / Reference No. / Source Figure or Page.
+      const srcBits = [sel(pf[PF.sourceType]), pf[PF.refNo], pf[PF.sourceFigPage]]
+        .map(s => (s || '').trim()).filter(Boolean).join(' · ');
+      const srcHtml = srcBits ? `<span class="coord-source">Source: ${esc(srcBits)}</span>` : '';
+      if (!provHtml && !srcHtml) return '';
+      return `<div style="margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">${provHtml}${srcHtml}</div>`;
     })()}
 
     ${pf[PF.description] ? `
@@ -2315,6 +2342,26 @@ function toggleCountryDropdown(ev) {
     document.addEventListener('keydown', esc);
   }
 }
+// Copy the coordinate table CSV (built during renderPattern) to clipboard.
+function copyCoordCSV(btn) {
+  const csv = window._coordCSV || '';
+  if (!csv) return;
+  const done = () => {
+    btn.textContent = 'Copied \u2713';
+    setTimeout(() => { btn.textContent = 'Copy CSV'; }, 1500);
+  };
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = csv; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch(e) {}
+    ta.remove();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(csv).then(done).catch(fallback);
+  } else fallback();
+}
+
 function selectCountry(val) {
   countryFilter = val;
   renderProducts();
