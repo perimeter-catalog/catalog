@@ -107,6 +107,19 @@ a:hover { text-decoration: underline; }
 /* ── Container ── */
 .container { max-width: 1200px; margin: 0 auto; padding: 24px 28px 60px; }
 
+/* ── Skeleton placeholders (B3) ── */
+.skeleton-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); height: 210px;
+  position: relative; overflow: hidden;
+}
+.skeleton-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, var(--bg3), transparent);
+  animation: skel-shimmer 1.2s infinite;
+}
+@keyframes skel-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
 /* ── Loading ── */
 .loading { text-align: center; padding: 80px 20px; }
 .loading .spinner { 
@@ -829,6 +842,56 @@ const FORM_FACTOR_ORDER = ['Table Top', 'HMD/VR', 'Tangent Screen', 'Tablet', 'S
 // ═══════════════════════════════════════════════════════════════
 // AIRTABLE API
 // ═══════════════════════════════════════════════════════════════
+// ── IndexedDB cache (B3) ──
+// Last session's Main records are cached so repeat visits paint instantly;
+// a fresh fetch always runs in the background and re-renders on change.
+// Note: cached Airtable attachment URLs can expire — the background refresh
+// replaces them within a couple of seconds.
+const IDB_NAME = 'apa-cache', IDB_STORE = 'kv', MAIN_CACHE_KEY = 'mainRecords-v1';
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open(IDB_NAME, 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore(IDB_STORE);
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbGet(key) {
+  try {
+    const db = await idbOpen();
+    return await new Promise((res, rej) => {
+      const rq = db.transaction(IDB_STORE).objectStore(IDB_STORE).get(key);
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = () => rej(rq.error);
+    });
+  } catch(e) { return undefined; }
+}
+async function idbSet(key, val) {
+  try {
+    const db = await idbOpen();
+    await new Promise((res, rej) => {
+      const tx = db.transaction(IDB_STORE, 'readwrite');
+      tx.objectStore(IDB_STORE).put(val, key);
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+  } catch(e) {}
+}
+
+function normalizeRecords(recs) {
+  recs.forEach(r => {
+    if (r.cellValuesByFieldId && !r.fields) r.fields = r.cellValuesByFieldId;
+    if (!r.fields) r.fields = {};
+  });
+  return recs;
+}
+
+function renderListSkeleton() {
+  $app.innerHTML = '<div class="product-grid">'
+    + Array.from({ length: 12 }, () => '<div class="skeleton-card"></div>').join('')
+    + '</div>';
+}
+
 async function fetchAllMain() {
   const fields = [
     F.model, F.productName, F.groupSort, F.sortOrder, F.manufacturer, F.type, F.formFactor,
@@ -2475,18 +2538,34 @@ function route() {
 // INIT
 // ═══════════════════════════════════════════════════════════════
 async function init() {
+  window.addEventListener('hashchange', route);
+  // Note: popstate-driven lightbox close is handled inside the
+  // PhotoSwipe module script at the bottom of <body>.
+
+  // 1) Cache-first paint: render immediately from the previous session's
+  //    data if available; otherwise show skeleton placeholders.
+  let usedCache = false;
   try {
-    allRecords = await fetchAllMain();
-    // Normalize: put cellValuesByFieldId into fields
-    allRecords.forEach(r => {
-      if (r.cellValuesByFieldId && !r.fields) r.fields = r.cellValuesByFieldId;
-      if (!r.fields) r.fields = {};
-    });
-    window.addEventListener('hashchange', route);
-    // Note: popstate-driven lightbox close is handled inside the
-    // PhotoSwipe module script at the bottom of <body>.
-    route();
+    const cached = await idbGet(MAIN_CACHE_KEY);
+    if (cached && Array.isArray(cached.records) && cached.records.length) {
+      allRecords = normalizeRecords(cached.records);
+      usedCache = true;
+      route();
+    }
+  } catch(e) { console.error('cache read failed:', e); }
+  if (!usedCache) renderListSkeleton();
+
+  // 2) Always fetch fresh data in the background; re-render only on change.
+  try {
+    const fresh = normalizeRecords(await fetchAllMain());
+    const changed = !usedCache || JSON.stringify(fresh) !== JSON.stringify(allRecords);
+    if (changed) {
+      allRecords = fresh;
+      route();
+    }
+    idbSet(MAIN_CACHE_KEY, { records: fresh, ts: Date.now() });
   } catch(e) {
+    if (usedCache) { console.error('background refresh failed:', e); return; }
     $app.innerHTML = `<div class="loading"><p style="color:var(--red)">Could not load the archive data. Please check your connection and try again.</p><p style="color:var(--text3);font-size:.8rem;font-family:var(--mono)">${esc(e.message)}</p><button onclick="location.reload()" style="margin-top:14px;padding:8px 24px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font:inherit;font-weight:500;cursor:pointer">Retry</button></div>`;
     console.error(e);
   }
