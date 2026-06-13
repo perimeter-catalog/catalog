@@ -87,6 +87,7 @@ a:hover { text-decoration: underline; }
 .site-title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
 .site-title span { color: var(--accent); }
 .header-meta { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+.header-right { display: flex; align-items: center; gap: 14px; margin-left: auto; min-width: 0; }
 .theme-toggle {
   font-size: 14px; line-height: 1; width: 30px; height: 30px; flex-shrink: 0;
   border: 1px solid var(--border2); border-radius: 50%;
@@ -724,9 +725,11 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
   <div class="site-title" role="link" tabindex="0" title="Back to archive root"
        onclick="goHome()"
        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span>//</span> AUTOMATED PERIMETER ARCHIVE</div>
-  <div class="header-meta" id="headerMeta">Loading...</div>
-  <span id="syncStatus" class="sync-status" hidden></span>
-  <button type="button" id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">&#x263E;</button>
+  <div class="header-right">
+    <span id="syncStatus" class="sync-status" hidden></span>
+    <button type="button" id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">&#x263E;</button>
+    <div class="header-meta" id="headerMeta">Loading...</div>
+  </div>
 </header>
 <nav class="breadcrumb" id="breadcrumb"></nav>
 </div>
