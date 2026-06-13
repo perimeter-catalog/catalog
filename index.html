@@ -93,6 +93,15 @@ a:hover { text-decoration: underline; }
   background: transparent; color: var(--text2); cursor: pointer; transition: all .15s;
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.sync-status {
+  font-size: 11px; color: var(--text3); font-family: var(--mono);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.sync-status .sync-spin {
+  width: 10px; height: 10px; border: 1.5px solid var(--border2);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .8s linear infinite; display: inline-block;
+}
 
 /* ── Breadcrumb ── */
 .breadcrumb { 
@@ -716,6 +725,7 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
        onclick="goHome()"
        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}"><span>//</span> AUTOMATED PERIMETER ARCHIVE</div>
   <div class="header-meta" id="headerMeta">Loading...</div>
+  <span id="syncStatus" class="sync-status" hidden></span>
   <button type="button" id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode">&#x263E;</button>
 </header>
 <nav class="breadcrumb" id="breadcrumb"></nav>
@@ -1283,7 +1293,7 @@ function productCardHtml(p) {
   `).join('');
 
   const thumbsHtml = visible.length
-    ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy">`).join('')
+    ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy" onerror="this.style.visibility='hidden'">`).join('')
       + (overflow > 0 ? `<span class="product-thumbs-more">+${overflow}</span>` : '')
     : `<div class="product-thumb-placeholder" title="Photo pending"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="1.8" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.3"/></svg><span>Photo<br>pending</span></div>`;
 
@@ -1616,7 +1626,7 @@ function renderProduct(productName) {
     html += `
       <a class="model-row${isOverview ? ' model-row-overview' : ''}" href="#model/${r.id}">
         <div class="model-so">${seqLabel}</div>
-        ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy">` : isOverview ? overviewThumb : '<div class="model-thumb-empty"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="2" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.2"/></svg><span>Photo pending</span></div>'}
+        ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : isOverview ? overviewThumb : '<div class="model-thumb-empty"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="2" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.2"/></svg><span>Photo pending</span></div>'}
         <div class="model-name-block">
           <div class="model-name">${esc(name)}${isOverview ? '<span class="overview-badge">FAMILY OVERVIEW</span>' : ''}</div>
           <div class="model-mfr">${esc(mfr ? mfr.split('\n')[0] : '')} ${tp ? '· '+esc(tp) : ''}</div>
@@ -2537,6 +2547,21 @@ function route() {
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
+// Background-sync indicator: reassures that stale-looking content (e.g.
+// expired cached thumbnails) is being refreshed right now.
+function setSyncStatus(state) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  clearTimeout(setSyncStatus._t);
+  el.hidden = false;
+  if (state === 'refreshing') el.innerHTML = '<span class="sync-spin"></span>Refreshing data\u2026';
+  else if (state === 'done') {
+    el.textContent = '\u2713 Up to date';
+    setSyncStatus._t = setTimeout(() => { el.hidden = true; }, 2500);
+  } else if (state === 'offline') el.textContent = 'Offline \u2014 showing cached data';
+  else el.hidden = true;
+}
+
 async function init() {
   window.addEventListener('hashchange', route);
   // Note: popstate-driven lightbox close is handled inside the
@@ -2554,6 +2579,7 @@ async function init() {
     }
   } catch(e) { console.error('cache read failed:', e); }
   if (!usedCache) renderListSkeleton();
+  if (usedCache) setSyncStatus('refreshing');
 
   // 2) Always fetch fresh data in the background; re-render only on change.
   try {
@@ -2564,8 +2590,9 @@ async function init() {
       route();
     }
     idbSet(MAIN_CACHE_KEY, { records: fresh, ts: Date.now() });
+    if (usedCache) setSyncStatus('done');
   } catch(e) {
-    if (usedCache) { console.error('background refresh failed:', e); return; }
+    if (usedCache) { setSyncStatus('offline'); console.error('background refresh failed:', e); return; }
     $app.innerHTML = `<div class="loading"><p style="color:var(--red)">Could not load the archive data. Please check your connection and try again.</p><p style="color:var(--text3);font-size:.8rem;font-family:var(--mono)">${esc(e.message)}</p><button onclick="location.reload()" style="margin-top:14px;padding:8px 24px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font:inherit;font-weight:500;cursor:pointer">Retry</button></div>`;
     console.error(e);
   }
