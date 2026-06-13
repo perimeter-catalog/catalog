@@ -701,6 +701,34 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
 /* ── Special Comments ── */
 .comments-block { font-size: 13px; white-space: pre-wrap; line-height: 1.7; color: var(--text2); }
 
+/* ── Family Overview structured renderer (C3) ── */
+.ovv { font-size: 13px; line-height: 1.65; color: var(--text2); }
+.ovv-lead { margin: 6px 0 10px; }
+.ovv-section {
+  font-size: 12px; font-family: var(--mono); letter-spacing: .08em;
+  color: var(--accent); margin: 24px 0 10px; padding-bottom: 5px;
+  border-bottom: 1px solid var(--border); font-weight: 500;
+}
+.ovv-subhead { font-size: 12px; font-family: var(--mono); color: var(--text3); margin: 14px 0 4px; }
+.ovv-p { margin: 8px 0; }
+.ovv-list { margin: 8px 0 8px 20px; padding: 0; }
+.ovv-list li { margin: 3px 0; }
+.ovv-note { font-size: 12px; color: var(--text3); margin: 8px 0; }
+.ovv-zap { color: var(--amber); }
+.ovv-table-wrap { overflow-x: auto; margin: 10px 0 14px; }
+.ovv-table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+.ovv-table th, .ovv-table td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: top; }
+.ovv-table thead th { background: var(--bg3); color: var(--text); font-weight: 600; }
+.ovv-table tbody th {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--text3); white-space: nowrap; background: var(--bg3);
+}
+.ovv-tier { display: block; font-size: 10px; font-family: var(--mono); color: var(--accent); font-weight: 400; margin-top: 2px; letter-spacing: .05em; }
+.ovv-item { margin: 12px 0; }
+.ovv-item-head { font-weight: 600; color: var(--text); }
+.ovv-item-after { font-weight: 400; color: var(--text2); }
+.ovv-item-body { margin: 4px 0 0 14px; }
+
 /* ── Back button ── */
 .back-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1643,6 +1671,131 @@ function renderProduct(productName) {
   $app.innerHTML = html;
 }
 
+// ── Family Overview structured renderer (C3) ──
+// Parses the archive's Family Overview text conventions:
+//   ═══ TITLE ═══ banner, ─── SECTION ─── headings, ▸/⚡ blocks with
+//   'Key: value' attribute lines, • bullets, [group] subheads, 📌 notes.
+// Runs of >=2 ▸ blocks where attribute lines dominate become a model
+// comparison table (attributes x models). Anything unparseable falls back
+// to the plain pre-wrap rendering (return null).
+function renderFamilyOverview(text) {
+  try {
+    const RAW = String(text || '');
+    if (RAW.indexOf('\u25b8') === -1) return null; // no ▸ blocks: not structured
+    const deco = s => esc(s).replace(/\u26a1/g, '<span class="ovv-zap">\u26a1</span>');
+    const lines = RAW.split('\n');
+    const out = [];
+    let para = [], list = [];
+    const flushPara = () => { if (para.length) { out.push(`<p class="ovv-p">${para.map(deco).join('<br>')}</p>`); para = []; } };
+    const flushList = () => { if (list.length) { out.push(`<ul class="ovv-list">${list.map(s => `<li>${deco(s)}</li>`).join('')}</ul>`); list = []; } };
+    const flushAll = () => { flushPara(); flushList(); };
+
+    // Render the free-form body of a non-table block (timeline entries etc.)
+    const renderBody = body => {
+      let h = '', p = [], ul = [];
+      const fp = () => { if (p.length) { h += `<p class="ovv-p">${p.map(deco).join('<br>')}</p>`; p = []; } };
+      const fl = () => { if (ul.length) { h += `<ul class="ovv-list">${ul.map(s => `<li>${deco(s)}</li>`).join('')}</ul>`; ul = []; } };
+      body.forEach(ln => {
+        const t = ln.trim();
+        if (!t) { fp(); fl(); }
+        else if (t.startsWith('\u2022')) { fp(); ul.push(t.slice(1).trim()); }
+        else if (ul.length && /^\s{6,}/.test(ln)) ul[ul.length - 1] += ' ' + t;
+        else { fl(); p.push(t); }
+      });
+      fp(); fl();
+      return h ? `<div class="ovv-item-body">${h}</div>` : '';
+    };
+
+    let i = 0;
+    while (i < lines.length) {
+      const raw = lines[i];
+      const t = raw.trim();
+
+      // ▸ / ⚡ block run
+      if (/^[\u25b8\u26a1]\s/.test(t)) {
+        flushAll();
+        const blocks = [];
+        while (i < lines.length) {
+          const bt = lines[i].trim();
+          if (bt === '') {
+            let j = i + 1;
+            while (j < lines.length && lines[j].trim() === '') j++;
+            if (j < lines.length && /^[\u25b8\u26a1]\s/.test(lines[j].trim())) { i = j; continue; }
+            break;
+          }
+          if (!/^[\u25b8\u26a1]\s/.test(bt)) break;
+          const head = bt.replace(/^[\u25b8\u26a1]\s*/, '');
+          const seg = head.split(' \u2014 ');
+          const name = seg[0].trim();
+          let after = seg.slice(1).join(' \u2014 ').trim();
+          const kv = []; const body = []; let lastKv = null;
+          i++;
+          while (i < lines.length) {
+            const ln = lines[i];
+            if (!/^\s{2,}\S/.test(ln)) break;
+            body.push(ln);
+            const km = ln.match(/^\s{2,}([A-Za-z][A-Za-z .\/+()-]{0,13}):\s+(\S.*)$/);
+            if (km) { kv.push([km[1].trim(), km[2].trim()]); lastKv = kv[kv.length - 1]; }
+            else if (lastKv && !ln.trim().startsWith('\u2022')) lastKv[1] += ' ' + ln.trim();
+            i++;
+          }
+          blocks.push({ name, after, kv, body });
+        }
+        const tabular = blocks.length >= 2 &&
+          blocks.filter(b => b.kv.length >= 2).length >= Math.ceil(blocks.length / 2);
+        if (tabular) {
+          const keys = [];
+          blocks.forEach(b => b.kv.forEach(([k]) => { if (!keys.includes(k)) keys.push(k); }));
+          let h = '<div class="ovv-table-wrap"><table class="ovv-table"><thead><tr><th></th>';
+          blocks.forEach(b => {
+            h += `<th>${deco(b.name)}${b.after ? `<span class="ovv-tier">${deco(b.after)}</span>` : ''}</th>`;
+          });
+          h += '</tr></thead><tbody>';
+          keys.forEach(k => {
+            h += `<tr><th>${esc(k)}</th>`;
+            blocks.forEach(b => {
+              const hit = b.kv.find(p => p[0] === k);
+              h += `<td>${hit ? deco(hit[1]) : '<span style="color:var(--text3)">\u2014</span>'}</td>`;
+            });
+            h += '</tr>';
+          });
+          h += '</tbody></table></div>';
+          out.push(h);
+        } else {
+          out.push(blocks.map(b =>
+            `<div class="ovv-item"><div class="ovv-item-head">${deco(b.name)}${b.after ? ` <span class="ovv-item-after">\u2014 ${deco(b.after)}</span>` : ''}</div>${renderBody(b.body)}</div>`
+          ).join(''));
+        }
+        continue;
+      }
+
+      if (/^\u2550+\s/.test(t)) { // ═══ TITLE ═══ (already shown in banner — render small)
+        flushAll();
+        out.push(`<div class="ovv-section">${deco(t.replace(/\u2550+/g, '').trim())}</div>`);
+      }
+      else if (/^\u2500+\s/.test(t)) { // ─── SECTION ───
+        flushAll();
+        out.push(`<div class="ovv-section">${deco(t.replace(/\u2500+/g, '').trim())}</div>`);
+      }
+      else if (t.startsWith('\ud83d\udccc')) { // 📌
+        flushAll();
+        out.push(`<div class="ovv-note">${deco(t)}</div>`);
+      }
+      else if (/^\[[^\]]+\]$/.test(t)) { // [group subhead]
+        flushAll();
+        out.push(`<div class="ovv-subhead">${deco(t.slice(1, -1))}</div>`);
+      }
+      else if (t.startsWith('\u2022')) { flushPara(); list.push(t.slice(1).trim()); }
+      else if (t === '') flushAll();
+      else if (list.length && /^\s{2,}/.test(raw)) list[list.length - 1] += ' ' + t;
+      else { flushList(); para.push(t); }
+      i++;
+    }
+    flushAll();
+    return out.length ? out.join('') : null;
+  } catch(e) { console.error('overview render failed:', e); return null; }
+}
+
 // ── Level 2: Model Detail ──
 async function renderModel(recId) {
   const rec = allRecords.find(r => r.id === recId);
@@ -1767,7 +1920,7 @@ async function renderModel(recId) {
     <div class="detail-section full-width" style="margin-bottom:20px">
       <div class="section-head open" onclick="toggleSection(this)">FAMILY OVERVIEW <span class="chevron">▾</span></div>
       <div class="section-body">
-        <div class="comments-block">${esc(f[F.familyOverview])}</div>
+        ${(() => { const h = renderFamilyOverview(f[F.familyOverview]); return h ? `<div class="ovv">${h}</div>` : `<div class="comments-block">${esc(f[F.familyOverview])}</div>`; })()}
       </div>
     </div>` : ''}
     <div class="detail-grid">
