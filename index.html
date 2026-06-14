@@ -1885,7 +1885,7 @@ async function renderModel(recId) {
       <div class="detail-sub">
         <span>${esc(productName)}</span>
         <span>${esc(f[F.releaseYear] || '')}</span>
-        <span>${esc(countryName(rec))}</span>
+        <span>${(() => { const fu = flagImg(rec); const cn = countryName(rec); return (fu ? `<img src="${fu}" class="country-flag-inline" alt="${esc(cn)}">` : "") + esc(cn); })()}</span>
       </div>
     </div>
     ${images.length ? `
