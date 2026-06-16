@@ -131,6 +131,27 @@ a:hover { text-decoration: underline; }
 }
 @keyframes skel-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
+/* ── Per-image loading shimmer (until each <img> fires onload) ──
+   Replaces blank/broken thumbnail boxes during first load with a calm
+   left-to-right shimmer, then fades the photo in. Cached images load
+   instantly so the shimmer is skipped. */
+.imgld {
+  background-image: linear-gradient(90deg, var(--bg) 20%, var(--bg3) 50%, var(--bg) 80%);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: img-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes img-shimmer { from { background-position: 220% 0; } to { background-position: -120% 0; } }
+.imgld--done {
+  background-image: none;
+  animation: img-fadein .35s ease both;
+}
+@keyframes img-fadein { from { opacity: .15; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .imgld { animation: none; }
+  .imgld--done { animation: none; }
+}
+
 /* ── Loading ── */
 .loading { text-align: center; padding: 80px 20px; }
 .loading .spinner { 
@@ -1325,7 +1346,7 @@ function productCardHtml(p) {
   `).join('');
 
   const thumbsHtml = visible.length
-    ? visible.map(t => `<img class="product-thumb" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy" onerror="this.style.visibility='hidden'">`).join('')
+    ? visible.map(t => `<img class="product-thumb imgld" src="${t.src}" alt="${esc(t.name)}" title="${esc(t.name)}" loading="lazy" onload="this.classList.add('imgld--done')" onerror="this.style.visibility='hidden'">`).join('')
       + (overflow > 0 ? `<span class="product-thumbs-more">+${overflow}</span>` : '')
     : `<div class="product-thumb-placeholder" title="Photo pending"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="1.8" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.3"/></svg><span>Photo<br>pending</span></div>`;
 
@@ -1658,7 +1679,7 @@ function renderProduct(productName) {
     html += `
       <a class="model-row${isOverview ? ' model-row-overview' : ''}" href="#model/${r.id}">
         <div class="model-so">${seqLabel}</div>
-        ${thumbSrc ? `<img class="model-thumb" src="${thumbSrc}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : isOverview ? overviewThumb : '<div class="model-thumb-empty"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="2" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.2"/></svg><span>Photo pending</span></div>'}
+        ${thumbSrc ? `<img class="model-thumb imgld" src="${thumbSrc}" alt="" loading="lazy" onload="this.classList.add('imgld--done')" onerror="this.style.visibility='hidden'">` : isOverview ? overviewThumb : '<div class="model-thumb-empty"><svg viewBox="0 0 48 36" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M8 30 Q8 10 24 8 Q40 10 40 30"/><circle cx="24" cy="26" r="2" fill="currentColor" stroke="none"/><line x1="24" y1="18" x2="24" y2="24" stroke-width="1.2"/></svg><span>Photo pending</span></div>'}
         <div class="model-name-block">
           <div class="model-name">${esc(name)}${isOverview ? '<span class="overview-badge">FAMILY OVERVIEW</span>' : ''}</div>
           <div class="model-mfr">${esc(mfr ? mfr.split('\n')[0] : '')} ${tp ? '· '+esc(tp) : ''}</div>
@@ -1893,7 +1914,7 @@ async function renderModel(recId) {
       <div class="section-head open" onclick="toggleSection(this)">PHOTOS (${images.length}) <span class="chevron">▾</span></div>
       <div class="section-body">
         <div class="image-gallery">
-          ${images.map((img, idx) => { const cap = imgCaption(img.filename); const thumb = (img.thumbnails && img.thumbnails.large && img.thumbnails.large.url) || img.url; return `<figure><a href="${img.url}" onclick="event.preventDefault();openLightbox(window._currentGallery,${idx});return false;"><img src="${thumb}" alt="${cap || esc(modelName)}"></a>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; }).join('')}
+          ${images.map((img, idx) => { const cap = imgCaption(img.filename); const thumb = (img.thumbnails && img.thumbnails.large && img.thumbnails.large.url) || img.url; return `<figure><a href="${img.url}" onclick="event.preventDefault();openLightbox(window._currentGallery,${idx});return false;"><img class="imgld" src="${thumb}" alt="${cap || esc(modelName)}" loading="lazy" onload="this.classList.add('imgld--done')"></a>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; }).join('')}
         </div>
       </div>
     </div>` : (f[F.familyOverview] ? `
@@ -2063,7 +2084,7 @@ async function renderModel(recId) {
       if (thumbCoords.length) {
         thumbHtml = `<div class="pattern-thumb-svg">${renderPatternSVG(thumbCoords, { isPolar: thumbPolar, mirror: false, compact: true })}</div>`;
       } else if (attachSrc) {
-        thumbHtml = `<img src="${attachSrc}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none'">`;
+        thumbHtml = `<img class="imgld" src="${attachSrc}" alt="${esc(name)}" loading="lazy" onload="this.classList.add('imgld--done')" onerror="this.style.display='none'">`;
       }
       pgHtml += `
         <a class="pattern-card" href="#pattern/${pf.id}/${recId}">
