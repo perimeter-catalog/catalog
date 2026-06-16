@@ -131,26 +131,6 @@ a:hover { text-decoration: underline; }
 }
 @keyframes skel-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 
-/* ── Per-image loading shimmer (until each <img> fires onload) ──
-   Replaces blank/broken thumbnail boxes during first load with a calm
-   left-to-right shimmer, then fades the photo in. Cached images load
-   instantly so the shimmer is skipped. */
-.imgld {
-  background-image: linear-gradient(90deg, var(--bg) 20%, var(--bg3) 50%, var(--bg) 80%);
-  background-size: 220% 100%;
-  background-repeat: no-repeat;
-  animation: img-shimmer 1.3s ease-in-out infinite;
-}
-@keyframes img-shimmer { from { background-position: 220% 0; } to { background-position: -120% 0; } }
-.imgld--done {
-  background-image: none;
-  animation: img-fadein .35s ease both;
-}
-@keyframes img-fadein { from { opacity: .15; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) {
-  .imgld { animation: none; }
-  .imgld--done { animation: none; }
-}
 
 /* ── Loading ── */
 .loading { text-align: center; padding: 80px 20px; }
@@ -765,6 +745,26 @@ a.product-card:hover, a.model-row:hover, a.pattern-card:hover { text-decoration:
   .breadcrumb { padding: 8px 16px; }
   .product-grid { grid-template-columns: 1fr; }
   .detail-title { font-size: 18px; }
+}
+
+/* ── Per-image loading shimmer (until each <img> fires onload) ──
+   img.* specificity + placed last so it overrides the `background:`
+   shorthand on .product-thumb / .model-thumb / .image-gallery img.
+   Cached images load instantly so the shimmer is skipped. */
+img.imgld {
+  background-image: linear-gradient(90deg, var(--bg) 20%, var(--bg3) 50%, var(--bg) 80%) !important;
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: img-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes img-shimmer { from { background-position: 220% 0; } to { background-position: -120% 0; } }
+img.imgld--done {
+  background-image: none !important;
+  animation: img-fadein .35s ease both;
+}
+@keyframes img-fadein { from { opacity: .15; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  img.imgld, img.imgld--done { animation: none; }
 }
 </style>
 </head>
