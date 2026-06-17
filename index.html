@@ -889,6 +889,25 @@ const PF = {
   lastModified: 'fld55IMcyCDSoYv7f',
 };
 
+// ── Stable image proxy URL ──────────────────────────────────────────
+// Airtable attachment URLs are signed and rotate on every fetch, so the
+// browser never cache-hits and re-downloads every image on each render
+// (the loading shimmer lingers / template stays). Route images through the
+// Worker /img endpoint instead: a STABLE URL keyed by the attachment id.
+// Browser + Cloudflare edge then cache across sessions AND re-renders.
+// Replacing an image in Airtable changes the attachment id -> new URL ->
+// auto refresh (no edit-confirmation lag). Falls back to the raw signed
+// URL if any id is missing.
+function imgSrc(tableId, recordId, fieldId, att, size) {
+  size = size || 'large';
+  if (att && att.id && recordId && fieldId && tableId) {
+    return `${API_BASE}/img/${tableId}/${recordId}/${fieldId}/${att.id}?s=${size}`;
+  }
+  if (!att) return '';
+  if (size === 'full') return att.url || '';
+  return (att.thumbnails && att.thumbnails[size] && att.thumbnails[size].url) || att.url || '';
+}
+
 // ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
@@ -1330,7 +1349,7 @@ function productCardHtml(p) {
   for (const r of p.records) {
     const imgs = r.fields?.[F.image];
     if (imgs && imgs.length) {
-      const src = imgs[0].thumbnails?.large?.url || imgs[0].url;
+      const src = imgSrc(MAIN_TABLE, r.id, F.image, imgs[0], 'large');
       if (src) thumbs.push({ src, name: g(r, F.model) || '' });
     }
   }
@@ -1671,7 +1690,7 @@ function renderProduct(productName) {
     // Use 'large' thumbnail (~1024px max) instead of 'small' (~36px max) because
     // the model-row thumb is now rendered at 112x84 CSS px (= 224x168 on Retina),
     // which makes the 36px small thumb 3-6x stretched and blurry.
-    const thumbSrc = imgs && imgs.length ? (imgs[0].thumbnails?.large?.url || imgs[0].url) : '';
+    const thumbSrc = imgs && imgs.length ? imgSrc(MAIN_TABLE, r.id, F.image, imgs[0], 'large') : '';
     const isOverview = !!r.fields?.[F.familyOverview];
     // Intra-group sequential numbering: count only real model rows, not overview rows.
     const seqLabel = isOverview ? '' : String(++groupSeq);
@@ -1890,8 +1909,8 @@ async function renderModel(recId) {
   // Each item gets explicit width/height from Airtable attachment metadata
   // so PhotoSwipe can do the smooth zoom-from-thumbnail animation.
   window._currentGallery = images.map(img => ({
-    src: img.url,
-    msrc: (img.thumbnails && img.thumbnails.large && img.thumbnails.large.url) || img.url,
+    src: imgSrc(MAIN_TABLE, recId, F.image, img, 'full'),
+    msrc: imgSrc(MAIN_TABLE, recId, F.image, img, 'large'),
     width: img.width || 0,
     height: img.height || 0,
     alt: imgCaption(img.filename) || modelName
@@ -1914,7 +1933,7 @@ async function renderModel(recId) {
       <div class="section-head open" onclick="toggleSection(this)">PHOTOS (${images.length}) <span class="chevron">▾</span></div>
       <div class="section-body">
         <div class="image-gallery">
-          ${images.map((img, idx) => { const cap = imgCaption(img.filename); const thumb = (img.thumbnails && img.thumbnails.large && img.thumbnails.large.url) || img.url; return `<figure><a href="${img.url}" onclick="event.preventDefault();openLightbox(window._currentGallery,${idx});return false;"><img class="imgld" src="${thumb}" alt="${cap || esc(modelName)}" loading="lazy" onload="this.classList.add('imgld--done')"></a>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; }).join('')}
+          ${images.map((img, idx) => { const cap = imgCaption(img.filename); const thumb = imgSrc(MAIN_TABLE, recId, F.image, img, 'large'); return `<figure><a href="${imgSrc(MAIN_TABLE, recId, F.image, img, 'full')}" onclick="event.preventDefault();openLightbox(window._currentGallery,${idx});return false;"><img class="imgld" src="${thumb}" alt="${cap || esc(modelName)}" loading="lazy" onload="this.classList.add('imgld--done')"></a>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; }).join('')}
         </div>
       </div>
     </div>` : (f[F.familyOverview] ? `
@@ -2079,7 +2098,7 @@ async function renderModel(recId) {
       const thumbCoords = picked.coords;
       const thumbPolar = picked.isPolar;
       const imgOD = pf_[PF.imageOD];
-      const attachSrc = imgOD && imgOD.length ? (imgOD[0].thumbnails?.large?.url || imgOD[0].url) : '';
+      const attachSrc = imgOD && imgOD.length ? imgSrc(PF_TABLE, pf.id, PF.imageOD, imgOD[0], 'large') : '';
       let thumbHtml = '';
       if (thumbCoords.length) {
         thumbHtml = `<div class="pattern-thumb-svg">${renderPatternSVG(thumbCoords, { isPolar: thumbPolar, mirror: false, compact: true })}</div>`;
@@ -2436,7 +2455,7 @@ async function renderPattern(pfId, modelId) {
           ${coords.length
             ? renderPatternSVG(coords, { isPolar, mirror: false, label: `${esc(patName)} (OD)` })
             : (imgOD && imgOD.length
-                ? (() => { window._patternImages = window._patternImages || {}; window._patternImages.od = imgOD[0]; return `<img src="${imgOD[0].url}" alt="OD" onclick="openPatternImage('od')" style="cursor:pointer">`; })()
+                ? (() => { window._patternImages = window._patternImages || {}; window._patternImages.od = imgOD[0]; return `<img src="${imgSrc(PF_TABLE, pfId, PF.imageOD, imgOD[0], 'full')}" alt="OD" onclick="openPatternImage('od')" style="cursor:pointer">`; })()
                 : '<p style="color:var(--text3);font-size:13px">No image available</p>')}
         </div>
       </div>
@@ -2446,7 +2465,7 @@ async function renderPattern(pfId, modelId) {
           <div class="pattern-image-wrap">
             ${osRenderCoords.length
               ? renderPatternSVG(osRenderCoords, { isPolar: osRenderPolar, mirror: osRenderMirror, label: `${esc(patName)} (OS)` })
-              : (() => { window._patternImages = window._patternImages || {}; window._patternImages.os = imgOS[0]; return `<img src="${imgOS[0].url}" alt="OS" onclick="openPatternImage('os')" style="cursor:pointer">`; })()}
+              : (() => { window._patternImages = window._patternImages || {}; window._patternImages.os = imgOS[0]; return `<img src="${imgSrc(PF_TABLE, pfId, PF.imageOS, imgOS[0], 'full')}" alt="OS" onclick="openPatternImage('os')" style="cursor:pointer">`; })()}
           </div>
         ` : ''}
         ${coords.length ? (() => {
