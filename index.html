@@ -2776,6 +2776,42 @@ async function init() {
   }
 }
 
+// ── Global safety net for the per-image loading shimmer ─────────────
+// Cached images can already be `complete` the instant they are inserted
+// via innerHTML, so their inline onload never fires and the shimmer
+// template stays visible behind the finished picture. Cover all cases:
+//   1) capture-phase load  → images that finish loading after insertion
+//   2) MutationObserver     → images already cached/complete at insertion
+//   3) capture-phase error  → broken images (also clears the shimmer)
+function clearImgShimmer(img) {
+  if (img && img.classList && img.classList.contains('imgld'))
+    img.classList.add('imgld--done');
+}
+document.addEventListener('load', e => {
+  if (e.target && e.target.tagName === 'IMG') clearImgShimmer(e.target);
+}, true);
+document.addEventListener('error', e => {
+  if (e.target && e.target.tagName === 'IMG') clearImgShimmer(e.target);
+}, true);
+function sweepImgShimmer(root) {
+  if (!root || !root.querySelectorAll) return;
+  root.querySelectorAll('img.imgld:not(.imgld--done)').forEach(img => {
+    if (img.complete && (img.naturalWidth > 0 || img.naturalHeight > 0))
+      clearImgShimmer(img);
+  });
+}
+new MutationObserver(muts => {
+  for (const m of muts)
+    for (const n of m.addedNodes) {
+      if (n.nodeType !== 1) continue;
+      if (n.tagName === 'IMG') {
+        if (n.complete && n.naturalWidth > 0) clearImgShimmer(n);
+      } else {
+        sweepImgShimmer(n);
+      }
+    }
+}).observe(document.documentElement, { childList: true, subtree: true });
+
 init();
 </script>
 
