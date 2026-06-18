@@ -1223,7 +1223,7 @@ function linkifyRefs(escapedText) {
 function flagImg(rec) {
   const flagArr = rec.fields?.[F.flag];
   if (!flagArr || !flagArr.length) return '';
-  return flagArr[0].url || flagArr[0].thumbnails?.small?.url || '';
+  return imgSrc(MAIN_TABLE, rec.id, F.flag, flagArr[0], 'small');
 }
 function countryName(rec) {
   const c = rec.fields?.[F.country];
@@ -1513,7 +1513,7 @@ function renderProducts() {
     if (!name || countryFlagUrls[name]) continue;
     const flagArr = r.fields?.[F.flag];
     if (!flagArr || !flagArr.length) continue;
-    const url = flagArr[0].thumbnails?.small?.url || flagArr[0].url;
+    const url = imgSrc(MAIN_TABLE, r.id, F.flag, flagArr[0], 'small');
     if (url) countryFlagUrls[name] = url;
   }
 
